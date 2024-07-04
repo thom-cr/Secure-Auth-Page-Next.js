@@ -114,13 +114,7 @@ import { jsx as jsx2, jsxs } from "react/jsx-runtime";
 function App() {
   return /* @__PURE__ */ jsxs("html", { children: [
     /* @__PURE__ */ jsxs("head", { children: [
-      /* @__PURE__ */ jsx2(
-        "link",
-        {
-          rel: "icon",
-          href: "data:image/x-icon;base64,AA"
-        }
-      ),
+      /* @__PURE__ */ jsx2("link", { rel: "icon", href: "data:image/x-icon;base64,AA" }),
       /* @__PURE__ */ jsx2(Meta, {}),
       /* @__PURE__ */ jsx2(Links, {})
     ] }),

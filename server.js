@@ -1,5 +1,13 @@
+import fs from "node:fs";
+import https from "node:https";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { createRequestHandler } from "@remix-run/express";
 import express from "express";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -26,6 +34,15 @@ const build = viteDevServer
 
 app.all("*", createRequestHandler({ build }));
 
-app.listen(4444, () => {
-  console.log("App listening on http://localhost:4444");
+const server = https.createServer(
+  {
+    key: fs.readFileSync(path.resolve(__dirname, "key.pem")),
+    cert: fs.readFileSync(path.resolve(__dirname, "cert.pem")),
+  },
+  app
+);
+
+const port = 4444;
+server.listen(port, () => {
+  console.log(`App listening on https://localhost:${port}`);
 });
