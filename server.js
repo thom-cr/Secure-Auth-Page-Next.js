@@ -1,10 +1,10 @@
+import express from "express";
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { createRequestHandler } from "@remix-run/express";
-import express from "express";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +19,7 @@ const viteDevServer =
       );
 
 const app = express();
+
 app.use(
   viteDevServer
     ? viteDevServer.middlewares
@@ -36,13 +37,13 @@ app.all("*", createRequestHandler({ build }));
 
 const server = https.createServer(
   {
-    key: fs.readFileSync(path.resolve(__dirname, "key.pem")),
-    cert: fs.readFileSync(path.resolve(__dirname, "cert.pem")),
+    key: fs.readFileSync(path.resolve(__dirname, "cert/key.pem")),
+    cert: fs.readFileSync(path.resolve(__dirname, "cert/cert.pem")),
   },
   app
 );
 
 const port = 4444;
 server.listen(port, () => {
-  console.log(`App listening on https://localhost:${port}`);
+  console.log(`Auth demo listening on https://localhost:${port}`);
 });

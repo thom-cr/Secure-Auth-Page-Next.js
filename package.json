@@ -23,6 +23,7 @@
     "@remix-run/express": "^2.10.0",
     "@remix-run/node": "^2.10.0",
     "@remix-run/react": "^2.10.0",
+    "bootstrap": "^5.3.3",
     "cross-env": "^7.0.3",
     "express": "^4.19.2",
     "isbot": "^4.4.0",
