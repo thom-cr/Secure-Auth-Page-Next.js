@@ -11,11 +11,14 @@ export async function action({ request }: ActionFunctionArgs)
     let email = String(formData.get("email"));
     let password = String(formData.get("password"));
     let errors = await validate(email, password);
+
     if (errors)
     {
         return { errors };
     }
+
     let user = await createAccount(email, password);
+    
     return redirect("/", {
         headers: {
             "Set-Cookie": await authCookie.serialize(user.id),

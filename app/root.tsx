@@ -7,11 +7,11 @@ import {
     useLoaderData,
     useLocation
 } from "@remix-run/react";
-
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-import "./styles.css";
 import { authCookie } from "./auth";
+
+import "./styles.css";
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
@@ -40,20 +40,22 @@ export default function App()
                 <Links />
             </head>
             <body>
-                <h1 className=" top-0 left-0 w-full text-4xl font-bold p-4 shadow-md z-10">
-                    DEMO WEBSITE
-                </h1>
+                <Link to="/">
+                    <h1 className=" top-0 left-0 w-full text-4xl font-bold p-4 shadow-md z-10">
+                        DEMO WEBSITE
+                    </h1>
+                </Link>
 
                 {isRoot && (
                     <div className="fixed top-0 right-0 p-4">
                         {userId ? (
-                            <Link to="/logout">
+                            <form method="post" action="/logout">
                                 <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
                                     Log out
                                 </button>
-                            </Link>
+                            </form>
                         ) : (
-                            <Link to="/signup">
+                            <Link to="/login">
                                 <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
                                     Log in
                                 </button>

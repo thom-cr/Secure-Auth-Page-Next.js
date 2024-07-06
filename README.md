@@ -45,3 +45,10 @@ Mise en place du https
 3- initialisation de typescript (oubli).
 
 4- nettoyage code.
+
+## Version 0.6 : 
+1- ajout logout.
+
+2- ajout du login.
+
+3- mise en place des verifications necessaires avec la base de donnee.
