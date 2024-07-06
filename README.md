@@ -36,3 +36,12 @@ Mise en place du https
 2- mise en place validation form.
 
 3- nettoyage code.
+
+## Version 0.5 : 
+1- ajout de prisma db temporairement pour test.
+
+2- mise a jour de la validation avec la base de donnees.
+
+3- initialisation de typescript (oubli).
+
+4- nettoyage code.
