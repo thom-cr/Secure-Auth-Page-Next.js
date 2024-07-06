@@ -1,8 +1,9 @@
 import React from "react";
 
-import { ActionFunctionArgs } from "@remix-run/node";
+import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData } from "@remix-run/react";
 import { validate } from "./validate";
+import { authCookie, createAccount } from "../../auth";
 
 export async function action({ request }: ActionFunctionArgs)
 {
@@ -10,8 +11,16 @@ export async function action({ request }: ActionFunctionArgs)
     let email = String(formData.get("email"));
     let password = String(formData.get("password"));
     let errors = validate(email, password);
-
-    return { errors };
+    if (errors)
+    {
+        return { errors };
+    }
+    let user = await createAccount(email, password);
+    return redirect("/", {
+        headers: {
+            "Set-Cookie": await authCookie.serialize(user.id),
+        },
+    });
 }
 
 export const meta = () =>

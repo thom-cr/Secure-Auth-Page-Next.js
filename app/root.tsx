@@ -5,12 +5,22 @@ import {
     Meta,
     Outlet,
     Scripts,
+    useLoaderData,
     useLocation
 } from "@remix-run/react";
 
 import type { LinksFunction } from "@remix-run/node";
+import { LoaderFunctionArgs } from "@remix-run/node";
 
 import "./styles.css";
+import { authCookie } from "./auth";
+
+export async function loader({ request }: LoaderFunctionArgs)
+{
+    let cookieString = request.headers.get("Cookie");
+    let userId = await authCookie.parse(cookieString);
+    return { userId };
+}
 
 export const meta = () =>
 {
@@ -19,6 +29,8 @@ export const meta = () =>
 
 export default function App()
 {
+    let { userId } = useLoaderData<typeof loader>();
+
     const location = useLocation();
     const isRoot = location.pathname === "/";
 
@@ -36,11 +48,19 @@ export default function App()
 
                 {isRoot && (
                     <div className="fixed top-0 right-0 p-4">
-                        <Link to="/signup">
-                            <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
-                                Sign Up
-                            </button>
-                        </Link>
+                        {userId ? (
+                            <Link to="/logout">
+                                <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
+                                    Log out
+                                </button>
+                            </Link>
+                        ) : (
+                            <Link to="/signup">
+                                <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
+                                    Log in
+                                </button>
+                            </Link>
+                        )}
                     </div>
                 )}
 
