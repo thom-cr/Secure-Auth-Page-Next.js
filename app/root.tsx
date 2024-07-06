@@ -17,6 +17,7 @@ export async function loader({ request }: LoaderFunctionArgs)
 {
     let cookieString = request.headers.get("Cookie");
     let userId = await authCookie.parse(cookieString);
+    
     return { userId };
 }
 

@@ -44,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs)
         );
     }
 
-    return redirect("/", {
+    return redirect("/home", {
         headers: {
             "Set-Cookie": await authCookie.serialize(userId),
         },

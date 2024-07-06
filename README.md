@@ -1,54 +1,69 @@
-# Projet 1
-Page d'authentification simplifie avec remix.
+# Projet 1 
 
-## Utilisation :
-```
-git clone { lien }
-```
+Page d'authentification simplifie avec remix. 
 
-```
-cd { dossier }
-```
+## Utilisation : 
+``` 
+git clone { lien } 
+``` 
 
-```
-npm run dev
-```
-## Version 0.1 : 
-App avec serveur http fonctionnelle
+``` 
+cd { dossier } 
+``` 
 
-## Version 0.2 : 
-Mise en place du https
+``` 
+npm run dev 
+``` 
+## Version 0.1 :  
 
-## Version 0.3 : 
-1- creation dossier pour certificat.
+App avec serveur http fonctionnelle 
 
-2- creation de la page principale.
+## Version 0.2 :  
 
-3- creation de la page signup.
+Mise en place du https 
 
-4- signup utilise post (console log uniquement).
+## Version 0.3 :  
 
-5- probleme appStylesHref inclusion css dans url systematiquement apparu.
+1- création dossier pour certificat. 
 
-## Version 0.4 : 
-1- resolution probleme css.
+2- création de la page principale. 
 
-2- mise en place validation form.
+3- création de la page signup. 
 
-3- nettoyage code.
+4- signup utilise post (console log uniquement). 
 
-## Version 0.5 : 
-1- ajout de prisma db temporairement pour test.
+5- problème appStylesHref inclusion css dans url systématiquement apparu. 
 
-2- mise a jour de la validation avec la base de donnees.
+## Version 0.4 :  
 
-3- initialisation de typescript (oubli).
+1- résolution problème css. 
 
-4- nettoyage code.
+2- mise en place validation form. 
 
-## Version 0.6 : 
-1- ajout logout.
+3- nettoyage code. 
 
-2- ajout du login.
+## Version 0.5 :  
 
-3- mise en place des verifications necessaires avec la base de donnee.
+1- ajout de Prisma db temporairement pour test. 
+
+2- mise à jour de la validation avec la base de données. 
+
+3- initialisation de typescript (oubli). 
+
+4- nettoyage code. 
+
+## Version 0.6 :  
+
+1- ajout logout. 
+
+2- ajout du login. 
+
+3- mise en place des vérifications nécessaires avec la base de données. 
+
+## Version 0.7 : 
+
+1- protection des routes avec l'authentification. 
+
+2- redirection des utilisateurs connectes. 
+
+3- création de la page index. 
