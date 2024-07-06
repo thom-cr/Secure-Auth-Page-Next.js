@@ -1,5 +1,22 @@
 # `@remix-run/react`
 
+## 2.10.2
+
+### Patch Changes
+
+- Forward `ref` to `Form` ([`bdd04217`](https://github.com/remix-run/remix/commit/bdd04217713292307078a30dab9033926d48ede6))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.10.2`
+
+## 2.10.1
+
+### Patch Changes
+
+- Fog of War (unstable): Don't discover links/forms with `reloadDocument` ([#9686](https://github.com/remix-run/remix/pull/9686))
+- Fog of War (unstable): Support route discovery from `<Form>` components ([#9665](https://github.com/remix-run/remix/pull/9665))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.10.1`
+
 ## 2.10.0
 
 ### Minor Changes

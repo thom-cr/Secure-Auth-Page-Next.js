@@ -1,4 +1,3 @@
-import React from "react";
 import {
     Link,
     Links,
@@ -9,7 +8,6 @@ import {
     useLocation
 } from "@remix-run/react";
 
-import type { LinksFunction } from "@remix-run/node";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
 import "./styles.css";

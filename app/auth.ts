@@ -15,8 +15,3 @@ export let authCookie = createCookie("auth", {
     secure: process.env.NODE_ENV === "production",
     maxAge: 2592000,
 });
-
-export async function createAccount(email:string, password:string)
-{
-    return { id:1 };
-}

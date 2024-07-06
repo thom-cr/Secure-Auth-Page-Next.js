@@ -1,16 +1,16 @@
-import React from "react";
-
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData } from "@remix-run/react";
+
+import { authCookie } from "../../auth";
+import { createAccount } from "./queries";
 import { validate } from "./validate";
-import { authCookie, createAccount } from "../../auth";
 
 export async function action({ request }: ActionFunctionArgs)
 {
     let formData = await request.formData();
     let email = String(formData.get("email"));
     let password = String(formData.get("password"));
-    let errors = validate(email, password);
+    let errors = await validate(email, password);
     if (errors)
     {
         return { errors };
