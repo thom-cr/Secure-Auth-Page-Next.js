@@ -29,3 +29,10 @@ Mise en place du https
 4- signup utilise post (console log uniquement).
 
 5- probleme appStylesHref inclusion css dans url systematiquement apparu.
+
+## Version 0.4 : 
+1- resolution probleme css.
+
+2- mise en place validation form.
+
+3- nettoyage code.

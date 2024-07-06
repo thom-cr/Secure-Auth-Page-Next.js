@@ -43,7 +43,7 @@ const server = https.createServer(
   app
 );
 
-const port = 4444;
+const port = 8888;
 server.listen(port, () => {
   console.log(`Auth demo listening on https://localhost:${port}`);
 });

@@ -3,7 +3,7 @@
   "name": "stage-projet1",
   "version": "1.0.0",
   "description": "Page d'authentification",
-  "main": "index.js",
+  "main": "root.tsx",
   "scripts": {
     "dev": "node ./server.js",
     "start": "cross-env NODE_ENV=production node ./server.js"
@@ -32,6 +32,9 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^2.10.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.4",
     "vite": "^5.3.3"
   }
 }

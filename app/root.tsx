@@ -10,14 +10,10 @@ import {
 
 import type { LinksFunction } from "@remix-run/node";
 
-import appStylesHref from "./styles/root.css";
+import "./styles.css";
 
-export const links: LinksFunction = () => [
-    { rel: "stylesheet", href: appStylesHref },
-    { href: "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css", rel: "stylesheet", integrity: "sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH", crossorigin: "anonymous"},
-];
-
-export const meta = () => {
+export const meta = () =>
+{
     return [{ title: "DEMO WEBSITE"}]
 }
 
@@ -34,15 +30,24 @@ export default function App()
                 <Links />
             </head>
             <body>
-                <h1>DEMO WEBSITE</h1>
+                <h1 className=" top-0 left-0 w-full text-4xl font-bold p-4 shadow-md z-10">
+                    DEMO WEBSITE
+                </h1>
+
                 {isRoot && (
-                    <Link to="/signup">
-                        <button>Sign Up</button>
-                    </Link>
+                    <div className="fixed top-0 right-0 p-4">
+                        <Link to="/signup">
+                            <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
+                                Sign Up
+                            </button>
+                        </Link>
+                    </div>
                 )}
-                <Outlet />
+
+                <div className="pt-20">
+                    <Outlet />
+                </div>
                 <Scripts />
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"></script>
             </body>
         </html>
     );
