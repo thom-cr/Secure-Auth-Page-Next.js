@@ -10,7 +10,7 @@ export async function accountExists(email: string) {
     return Boolean(account);
 }
 
-export async function createAccount(email: string, password: string)
+export async function createAccount(first_name: string, last_name: string, email: string, password: string)
 {
     let salt = crypto.randomBytes(16).toString("hex");
     let hash = crypto
@@ -19,6 +19,8 @@ export async function createAccount(email: string, password: string)
     
     return prisma.account.create({
         data: {
+            first_name: first_name,
+            last_name: last_name,
             email: email,
             Password: {
                 create:{

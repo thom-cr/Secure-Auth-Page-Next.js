@@ -1,8 +1,8 @@
 import { accountExists } from "./queries";
 
-export async function validate(email: string, password:string)
+export async function validate(email: string, password:string, password_check:string)
 {
-    let errors: { email?: string; password?: string } = {};
+    let errors: { email?: string; password?: string; password_check?: string } = {};
     if (!email)
     {
         errors.email = "Email is required";
@@ -24,6 +24,11 @@ export async function validate(email: string, password:string)
     else if (password.length < 8)
     {
         errors.password = "Password must be at least 8 characters";
+    }
+
+    if (password !== password_check)
+    {
+        errors.password_check = "Password doesn't match";
     }
 
     return Object.keys(errors).length ? errors : null;

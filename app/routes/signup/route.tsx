@@ -8,16 +8,19 @@ import { validate } from "./validate";
 export async function action({ request }: ActionFunctionArgs)
 {
     let formData = await request.formData();
+    let first_name = String(formData.get("first_name"));
+    let last_name = String(formData.get("last_name"));
     let email = String(formData.get("email"));
     let password = String(formData.get("password"));
-    let errors = await validate(email, password);
+    let password_check = String(formData.get("password_check"));
+    let errors = await validate(email, password, password_check);
 
     if (errors)
     {
         return { errors };
     }
 
-    let user = await createAccount(email, password);
+    let user = await createAccount(first_name, last_name, email, password);
     
     return redirect("/", {
         headers: {
@@ -36,6 +39,7 @@ export default function Signup()
     let actionData = useActionData<typeof action>();
     let emailError = actionData?.errors?.email;
     let passwordError = actionData?.errors?.password;
+    let passwordCheckError = actionData?.errors?.password_check;
 
     return (
         <div className="flex min-h-full flex-1 flex-col mt-20 sm:px-6 lg:px-8">
@@ -47,6 +51,30 @@ export default function Signup()
             <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
                 <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                     <Form className="space-y-6" method="post">
+                        <div>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">
+                                First Name {" "}
+                            </label>
+                            <input
+                                autoFocus
+                                id="first_name"
+                                name="first_name"
+                                type="text"
+                                required
+                                className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">
+                                Last Name {" "}
+                            </label>
+                            <input
+                                autoFocus
+                                id="last_name"
+                                name="last_name"
+                                type="text"
+                                required
+                                className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
+                        </div>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
                                 Email address {" "}
@@ -75,6 +103,19 @@ export default function Signup()
                                 aria-describedby="password-error"
                                 required
                                 className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
+                        </div>
+
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
+                                Password check{" "}
+                                {passwordCheckError && ( <span className="text-red-500"> {passwordCheckError} </span> )}
+                            </label>
+                            <input
+                                id="password_check"
+                                name="password_check"
+                                type="password"
+                                required
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
                         </div>
                         
                         <div>

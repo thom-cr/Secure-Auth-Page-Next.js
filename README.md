@@ -66,4 +66,14 @@ Mise en place du https
 
 2- redirection des utilisateurs connectes. 
 
-3- création de la page index. 
+3- création de la page index.
+
+## Version 0.8 : 
+
+1- Modification base de données. 
+
+2- Ajout des champs prénoms et noms. 
+
+3- Ajout d’un champ mot de passe vérification. 
+
+4- Nettoyage code et modifications des fichiers signup associés aux updates.  

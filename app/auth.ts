@@ -1,6 +1,7 @@
 import { createCookie, redirect } from "@remix-run/node";
 
 let secret = process.env.COOKIE_SECRET || "default";
+
 if (secret === "default")
 {
     console.warn("No COOKIE_SECRET set, the app is insecure.");
@@ -18,7 +19,8 @@ export let authCookie = createCookie("auth", {
 
 export async function requireAuthCookie(request: Request)
 {
-    let userId = await authCookie.parse(
+    let userId = await authCookie.parse
+    (
         request.headers.get("Cookie"),
     );
 

@@ -68,6 +68,7 @@ export default function App()
                 <div className="pt-20">
                     <Outlet />
                 </div>
+
                 <Scripts />
             </body>
         </html>
