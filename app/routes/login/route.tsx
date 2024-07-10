@@ -1,9 +1,9 @@
 import { type ActionFunctionArgs, json, redirect } from "@remix-run/node";
 import { Form, Link, useActionData } from "@remix-run/react";
 
-import { authCookie } from "../../auth";
 import { login } from "./queries";
 import { validate } from "./validate";
+import { commitSession, getSession } from "../../sessions.server";
 
 interface ValidationErrors
 {
@@ -44,9 +44,12 @@ export async function action({ request }: ActionFunctionArgs)
         );
     }
 
+    const session = await getSession(request.headers.get("Cookie"));
+    session.set("userId", userId);
+    
     return redirect("/home", {
         headers: {
-            "Set-Cookie": await authCookie.serialize(userId),
+            "Set-Cookie": await commitSession(session),
         },
     });
 }
@@ -73,7 +76,7 @@ export default function Signup() {
                   >
                     Email address{" "}
                     {actionResult?.errors?.email && (
-                      <span id="email-error" className="text-red-brand">
+                      <span id="email-error" className="text-red-brand font-bold">
                         {actionResult.errors.email}
                       </span>
                     )}
@@ -98,7 +101,7 @@ export default function Signup() {
                   >
                     Password{" "}
                     {actionResult?.errors?.password && (
-                      <span id="password-error" className="text-red-brand">
+                      <span id="password-error" className="text-red-brand font-bold">
                         {actionResult.errors.password}
                       </span>
                     )}
@@ -113,6 +116,13 @@ export default function Signup() {
                       required
                       className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
+                  </div>
+                  <div className="text-red-brand font-bold text-center mt-3">
+                    {actionResult?.errors?.message ? (
+                      actionResult.errors.message
+                    ) : (
+                      <>&nbsp;</>
+                    )}
                   </div>
                 </div>
   
@@ -142,13 +152,6 @@ export default function Signup() {
                 </div> */}
   
                 <div>
-                  <div className="text-red-brand">
-                    {actionResult?.errors?.message ? (
-                      actionResult.errors.message
-                    ) : (
-                      <>&nbsp;</>
-                    )}
-                  </div>
                   <button
                     type="submit"
                     className="flex w-full justify-center rounded-md bg-black px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"

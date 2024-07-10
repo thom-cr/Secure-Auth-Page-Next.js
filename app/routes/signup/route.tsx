@@ -1,7 +1,7 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData } from "@remix-run/react";
 
-import { authCookie } from "../../auth";
+import { getSession, commitSession } from "../../sessions.server";
 import { createAccount } from "./queries";
 import { validate } from "./validate";
 
@@ -22,9 +22,12 @@ export async function action({ request }: ActionFunctionArgs)
 
     let user = await createAccount(first_name, last_name, email, password);
     
+    const session = await getSession(request.headers.get("Cookie"));
+    session.set("userId", user.id);
+
     return redirect("/", {
         headers: {
-            "Set-Cookie": await authCookie.serialize(user.id),
+            "Set-Cookie": await commitSession(session),
         },
     });
 }
@@ -78,7 +81,7 @@ export default function Signup()
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
                                 Email address {" "}
-                                {emailError && ( <span className="text-red-500"> {emailError} </span> )}
+                                {emailError && ( <span className="text-red-500 font-bold"> {emailError} </span> )}
                             </label>
                             <input
                                 autoFocus
@@ -93,7 +96,7 @@ export default function Signup()
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
                                 Password {" "}
-                                {passwordError && ( <span className="text-red-500"> {passwordError} </span> )}
+                                {passwordError && ( <span className="text-red-500 font-bold"> {passwordError} </span> )}
                             </label>
                             <input
                                 id="password"
@@ -108,7 +111,7 @@ export default function Signup()
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
                                 Password check{" "}
-                                {passwordCheckError && ( <span className="text-red-500"> {passwordCheckError} </span> )}
+                                {passwordCheckError && ( <span className="text-red-500 font-bold"> {passwordCheckError} </span> )}
                             </label>
                             <input
                                 id="password_check"

@@ -77,3 +77,11 @@ Mise en place du https
 3- Ajout d’un champ mot de passe vérification. 
 
 4- Nettoyage code et modifications des fichiers signup associés aux updates.  
+
+## Issue 1 ( CookieSessionStorage ) :
+
+- Remplacement du cookie d'authentification par un cookie de session.
+
+- auth.server.ts --> sessions.server.ts
+
+- Mise a jour de la recuperation des cookies dans l'ensemble des routes.
