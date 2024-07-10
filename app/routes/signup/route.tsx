@@ -2,8 +2,8 @@ import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData } from "@remix-run/react";
 
 import { getSession, commitSession } from "../../sessions.server";
-import { createAccount } from "./queries";
-import { validate } from "./validate";
+import { mailVerification, uuidGenerator } from "./queries.server";
+import { validate } from "./validate.server";
 
 export async function action({ request }: ActionFunctionArgs)
 {
@@ -20,12 +20,20 @@ export async function action({ request }: ActionFunctionArgs)
         return { errors };
     }
 
-    let user = await createAccount(first_name, last_name, email, password);
-    
+    const v_code = await mailVerification(email);
+    const token = uuidGenerator();
     const session = await getSession(request.headers.get("Cookie"));
-    session.set("userId", user.id);
 
-    return redirect("/", {
+    session.set("v_code", v_code);
+    session.set("v_tries", 0);
+    session.set("token", token);
+    session.set("exp_token", Date.now() + 600000);
+    session.set("first_name", first_name);
+    session.set("last_name", last_name);
+    session.flash("email", email);
+    session.flash("password", password);
+
+    return redirect(`/verify/${token}`, {
         headers: {
             "Set-Cookie": await commitSession(session),
         },

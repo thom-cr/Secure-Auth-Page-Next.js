@@ -85,3 +85,21 @@ Mise en place du https
 - auth.server.ts --> sessions.server.ts
 
 - Mise a jour de la recuperation des cookies dans l'ensemble des routes.
+
+## Issue 4 ( SQlite Migration ) :
+
+- Migration de la base de donnee vers une version SQlite.
+
+## Issue 3 ( Mail Checking ) :
+
+- Creation verify.${token}.tsx
+
+- Redirection vers une page de verification avec code a 6 chiffres envoye par mail.
+
+- Mise a jour du signup pour la redirection et deplacement de la creation de compte dans verify.
+
+- Mise a jour des differentes routes et expiration du token afin d'empecher de rouvrir la verification.
+
+- validate.ts --> validate.server.ts
+
+- queries.ts --> queries.server.ts
