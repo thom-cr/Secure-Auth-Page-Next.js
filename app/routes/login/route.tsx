@@ -1,9 +1,9 @@
-import { type ActionFunctionArgs, json, redirect } from "@remix-run/node";
+import { type ActionFunctionArgs, json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData } from "@remix-run/react";
 
 import { login } from "./queries.server";
 import { validate } from "./validate.server";
-import { commitSession, getSession } from "../../sessions.server";
+import { commitSession, getSession, requireAnonymous } from "../../sessions.server";
 
 interface ValidationErrors
 {
@@ -21,6 +21,12 @@ export const meta = () =>
 {
     return [{ title: "DEMO | Login"}]
 };
+
+export async function loader({ request }: LoaderFunctionArgs)
+{
+    await requireAnonymous(request);
+    return json({});
+}
 
 export async function action({ request }: ActionFunctionArgs)
 {

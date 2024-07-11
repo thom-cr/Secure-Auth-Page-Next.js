@@ -19,6 +19,20 @@ export const { getSession, commitSession, destroySession } = createCookieSession
     }
 });
 
+export const requireAnonymous = async (request: Request) => {
+    const session = await getSession(request.headers.get("Cookie"));
+    let user_id = session.get("userId");
+  
+    if (user_id)
+    {
+        throw redirect("/home", {
+            headers: {
+                "Set-Cookie": await commitSession(session),
+            },
+        });
+    }
+};
+
 export async function requireAuthCookie(request: Request)
 {
     let session = await getSession(request.headers.get("Cookie"));

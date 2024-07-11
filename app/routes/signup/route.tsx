@@ -1,148 +1,298 @@
-import { ActionFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { Form, json, Link, useActionData } from "@remix-run/react";
 
-import { getSession, commitSession } from "../../sessions.server";
-import { mailVerification, uuidGenerator } from "./queries.server";
-import { validate } from "./validate.server";
+import { getSession, commitSession, requireAnonymous, destroySession } from "../../sessions.server";
+import { createAccount, mailVerification } from "./queries.server";
+import { validate_email, validate_password } from "./validate.server";
+
+interface ValidationErrors
+{
+    email?: string;
+    code?: string;
+    password?: string;
+    password_check?: string;
+    message?: string;
+}
+
+interface ActionData
+{
+    errors?: ValidationErrors;
+    step?: "verify_email" | "verify_code" | "verify_password";
+}
+
+export async function loader({ request }: LoaderFunctionArgs)
+{
+    await requireAnonymous(request);
+    return json({});
+}
 
 export async function action({ request }: ActionFunctionArgs)
 {
-    let formData = await request.formData();
-    let first_name = String(formData.get("first_name"));
-    let last_name = String(formData.get("last_name"));
-    let email = String(formData.get("email"));
-    let password = String(formData.get("password"));
-    let password_check = String(formData.get("password_check"));
-    let errors = await validate(email, password, password_check);
-
-    if (errors)
-    {
-        return { errors };
-    }
-
-    const v_code = await mailVerification(email);
-    const token = uuidGenerator();
+    const formData = await request.formData();
+    const intent = String(formData.get("intent"));
     const session = await getSession(request.headers.get("Cookie"));
 
-    session.set("v_code", v_code);
-    session.set("v_tries", 0);
-    session.set("token", token);
-    session.set("exp_token", Date.now() + 600000);
-    session.set("first_name", first_name);
-    session.set("last_name", last_name);
-    session.flash("email", email);
-    session.flash("password", password);
+    if (intent === "verify_email")
+    {
+        const email = String(formData.get("email"));
 
-    return redirect(`/verify/${token}`, {
-        headers: {
-            "Set-Cookie": await commitSession(session),
-        },
-    });
+        let errors = await validate_email(email);
+
+        if (errors)
+        {
+            return json<ActionData>({ errors });
+        }
+
+        const v_code = await mailVerification(email);
+
+        session.flash("email", email);
+        session.set("v_code", v_code);
+        session.set("v_tries", 0);
+
+        return json<ActionData>({ step: "verify_code" }, {
+            headers: {
+                "Set-Cookie": await commitSession(session),
+            },
+        });
+    }
+
+    if (intent === "verify_code")
+    {
+        const v_code = session.get("v_code");
+        const buff_code = `${formData.get('digit1')}${formData.get('digit2')}${formData.get('digit3')}${formData.get('digit4')}${formData.get('digit5')}${formData.get('digit6')}`;
+        const v_tries = session.get("v_tries") || 0;
+
+        if(process.env.NODE_ENV === "development")
+        {
+            console.log(`V_code : ${v_code}`);
+            console.log(`Buff_code : ${buff_code}`);
+        }
+        
+        if (v_tries >= 3)
+        {
+            session.unset("email");
+            session.unset("v_code");
+            session.unset("v_tries");
+
+            return redirect("/", {
+                headers: {
+                    "Set-Cookie": await destroySession(session),
+                },
+            });
+        }
+
+        if (buff_code === v_code)
+        {
+            session.unset("v_code");
+            session.unset("v_tries");
+            
+            return json<ActionData>({ step: "verify_password" }, {
+                headers: {
+                    "Set-Cookie": await commitSession(session),
+                },
+            });
+        }
+        else
+        {
+            session.set("v_tries", v_tries + 1);
+
+            return json<ActionData>({ errors: { code: "Invalid verification code" }, step: "verify_code" }, {
+                headers: {
+                    "Set-Cookie": await commitSession(session),
+                },
+            });
+        }
+    }
+
+    if (intent === "verify_password")
+    {
+        const first_name = String(formData.get("first_name"));
+        const last_name = String(formData.get("last_name"));
+        const email = session.get("email");
+        const password = String(formData.get("password"));
+        const password_check = String(formData.get("password_check"));
+
+        let errors = await validate_password(password, password_check);
+
+        if (errors)
+        {
+            return json<ActionData>({ errors, step: "verify_password" }, { status: 400 });
+        }
+
+        let user = await createAccount(first_name, last_name, email, password);
+        session.set("userId", user.id);
+
+        return redirect("/home", {
+            headers: {
+                "Set-Cookie": await commitSession(session),
+            },
+        });
+    }
 }
 
-export const meta = () =>
-{
-    return [{ title: "DEMO | Signup"}]
+export const meta = () => {
+    return [{ title: "DEMO | Signup" }];
 };
 
 export default function Signup()
 {
-    let actionData = useActionData<typeof action>();
-    let emailError = actionData?.errors?.email;
-    let passwordError = actionData?.errors?.password;
-    let passwordCheckError = actionData?.errors?.password_check;
+    const actionResult = useActionData<ActionData>();
+    const step = actionResult?.step || "verify_email";
+
+    let codeError = actionResult?.errors?.code;
+    let emailError = actionResult?.errors?.email;
+    let passwordError = actionResult?.errors?.password;
+    let passwordCheckError = actionResult?.errors?.password_check;
+
+    const input_jumper = (event: React.FormEvent<HTMLInputElement>) => {
+        const input = event.currentTarget;
+
+        if (input.value.length === 1)
+        {
+            const next_input = input.nextElementSibling as HTMLInputElement | null;
+
+            if (next_input && next_input.tagName === 'INPUT')
+            {
+                next_input.focus();
+            }
+        }
+    };
 
     return (
         <div className="flex min-h-full flex-1 flex-col mt-20 sm:px-6 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-wd">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 id="signup-header" className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
                     Sign Up
                 </h2>
             </div>
             <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-                <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-                    <Form className="space-y-6" method="post">
-                        <div>
-                            <label className="block text-sm font-medium leading-6 text-gray-900">
-                                First Name {" "}
-                            </label>
-                            <input
-                                autoFocus
-                                id="first_name"
-                                name="first_name"
-                                type="text"
-                                required
-                                className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
+                {step === "verify_email" ? (
+                    <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+                        <Form method="post" className="space-y-6">
+                            <input type="hidden" name="intent" value="verify_email" />
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+                                    Email address {" "}
+                                    {emailError && (<span className="text-red-500 font-bold"> {emailError} </span>)}
+                                </label>
+                                <input
+                                    autoFocus
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
+                                />
+                            </div>
+                            <div>
+                                <button type="submit" className="flex w-full justify-center rounded-md bg-black px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                    Send mail
+                                </button>
+                            </div>
+                        </Form>
+                        <div className="left-0 p-4">
+                            <Link to="/">
+                                <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700">Back</button>
+                            </Link>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium leading-6 text-gray-900">
-                                Last Name {" "}
-                            </label>
-                            <input
-                                autoFocus
-                                id="last_name"
-                                name="last_name"
-                                type="text"
-                                required
-                                className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
-                        </div>
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
-                                Email address {" "}
-                                {emailError && ( <span className="text-red-500 font-bold"> {emailError} </span> )}
-                            </label>
-                            <input
-                                autoFocus
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
-                        </div>
-                        
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-                                Password {" "}
-                                {passwordError && ( <span className="text-red-500 font-bold"> {passwordError} </span> )}
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                aria-describedby="password-error"
-                                required
-                                className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
-                        </div>
-
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-                                Password check{" "}
-                                {passwordCheckError && ( <span className="text-red-500 font-bold"> {passwordCheckError} </span> )}
-                            </label>
-                            <input
-                                id="password_check"
-                                name="password_check"
-                                type="password"
-                                required
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"/>
-                        </div>
-                        
-                        <div>
-                            <button type="submit" className="flex w-full justify-center rounded-md bg-black px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                Sign in
-                            </button>
-                        </div>
-                    </Form>
-
-                    <div className="fixed left-0 p-4">
-                        <Link to="/">
-                            <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700">Back</button>
-                        </Link>
                     </div>
-                </div>
+                ) : step === "verify_code" ? (
+                    <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+                        <Form method="post" className="space-y-6">
+                            <input type="hidden" name="intent" value="verify_code" />
+                                <div className="flex space-x-2 justify-center">
+                                    {[...Array(6)].map((_, i) => (
+                                        <input key={i} name={`digit${i + 1}`} type="text" maxLength={1} className="w-12 h-12 text-center text-xl border border-gray-300 rounded" required onInput={input_jumper} />
+                                    ))}
+                                </div>
+                                <div>
+                                    <button type="submit" className="flex w-full justify-center rounded-md bg-black px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                        Verify
+                                    </button>
+                                </div>
+                        </Form>
+                        {codeError && <p className="text-red-500 mt-4 font-bold">{codeError}</p>}
+                        <div className="left-0 p-4">
+                            <Link to="/">
+                                <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700">Back</button>
+                            </Link>
+                        </div>
+                    </div>
+                ) : step === "verify_password" ? (
+                    <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+                        <Form className="space-y-6" method="post">
+                            <input type="hidden" name="intent" value="verify_password" />
+                            <div>
+                                <label className="block text-sm font-medium leading-6 text-gray-900">
+                                    First Name {" "}
+                                </label>
+                                <input
+                                    autoFocus
+                                    id="first_name"
+                                    name="first_name"
+                                    type="text"
+                                    required
+                                    className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium leading-6 text-gray-900">
+                                    Last Name {" "}
+                                </label>
+                                <input
+                                    id="last_name"
+                                    name="last_name"
+                                    type="text"
+                                    required
+                                    className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
+                                    Password {" "}
+                                    {passwordError && (<span className="text-red-500 font-bold"> {passwordError} </span>)}
+                                </label>
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    aria-describedby="password-error"
+                                    required
+                                    className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="password_check" className="block text-sm font-medium leading-6 text-gray-900">
+                                    Password check{" "}
+                                    {passwordCheckError && (<span className="text-red-500 font-bold"> {passwordCheckError} </span>)}
+                                </label>
+                                <input
+                                    id="password_check"
+                                    name="password_check"
+                                    type="password"
+                                    required
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
+                                />
+                            </div>
+
+                            <div>
+                                <button type="submit" className="flex w-full justify-center rounded-md bg-black px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+                                    Create Account
+                                </button>
+                            </div>
+                        </Form>
+                        <div className="fixed left-0 p-4">
+                            <Link to="/">
+                                <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700">Back</button>
+                            </Link>
+                        </div>
+                    </div>
+                ) : null}
             </div>
-       </div>
+        </div>
     );
 }

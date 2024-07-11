@@ -25,28 +25,13 @@ export async function mailVerification(email: string)
         subject: 'Mail Verification',
         html: `<p>Your verification code is <strong>${v_code}</strong></p>`,
     });
-
-    console.log(`Generated code : ${v_code}`);
+    
+    if(process.env.NODE_ENV === "development")
+    {
+        console.log(`Generated code : ${v_code}`);
+    }
 
     return v_code;
-}
-
-export function uuidGenerator()
-{
-    const bytes = crypto.randomBytes(16);
-
-    bytes[6] = (bytes[6] & 0x0f) | 0x40; 
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-
-    const hexBytes = bytes.toString('hex');
-    
-    return [
-        hexBytes.slice(0, 8),
-        hexBytes.slice(8, 12),
-        hexBytes.slice(12, 16),
-        hexBytes.slice(16, 20),
-        hexBytes.slice(20, 32)
-    ].join('-');
 }
 
 export async function createAccount(first_name: string, last_name: string, email: string, password: string)
