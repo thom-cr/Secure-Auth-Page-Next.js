@@ -1,9 +1,15 @@
-import { ActionFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { Form, json, Link, useActionData } from "@remix-run/react";
 
-import { getSession, commitSession } from "../../sessions.server";
+import { getSession, commitSession, requireAnonymous } from "../../sessions.server";
 import { createAccount } from "./queries";
 import { validate } from "./validate";
+
+export async function loader({ request }: LoaderFunctionArgs)
+{
+    await requireAnonymous(request);
+    return json({});
+}
 
 export async function action({ request }: ActionFunctionArgs)
 {
