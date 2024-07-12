@@ -1,5 +1,6 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, json, Link, useActionData } from "@remix-run/react";
+
 import { randomUUID } from "node:crypto";
 
 import { getSession, commitSession, requireAnonymous, destroySession } from "../../sessions.server";
@@ -16,6 +17,12 @@ interface ActionData
 {
     errors?: ValidationErrors;
     step?: "verify_email" | "verify_code";
+}
+
+export async function loader({ request }: LoaderFunctionArgs)
+{
+    await requireAnonymous(request);
+    return json({});
 }
 
 export async function loader({ request }: LoaderFunctionArgs)
