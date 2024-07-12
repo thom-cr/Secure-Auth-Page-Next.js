@@ -85,7 +85,3 @@ Mise en place du https
 - auth.server.ts --> sessions.server.ts
 
 - Mise a jour de la recuperation des cookies dans l'ensemble des routes.
-
-## Issue 4 ( SQlite Migration ) :
-
-- Migration de la base de donnee vers une version SQlite.

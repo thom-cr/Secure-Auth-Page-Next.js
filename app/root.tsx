@@ -9,14 +9,14 @@ import {
 } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-import { authCookie } from "./auth";
+import { getSession, commitSession, requireAuthCookie } from "./sessions.server";
 
 import "./styles.css";
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
-    let cookieString = request.headers.get("Cookie");
-    let userId = await authCookie.parse(cookieString);
+    const session = await getSession(request.headers.get("Cookie"));
+    const userId = session.get("userId");
     
     return { userId };
 }

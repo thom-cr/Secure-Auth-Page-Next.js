@@ -1,13 +1,13 @@
 import { redirect } from "@remix-run/node";
-import { authCookie } from "../auth";
+import { getSession, destroySession } from "../sessions.server";
 
-export async function action()
+export async function action({ request }: { request: Request })
 {
+    let session = await getSession(request.headers.get("Cookie"));
+
     return redirect("/", {
         headers: {
-            "Set-Cookie": await authCookie.serialize("", {
-                maxAge: 0,
-            }),
+            "Set-Cookie": await destroySession(session),
         },
     });
 }

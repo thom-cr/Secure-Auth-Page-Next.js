@@ -1,13 +1,12 @@
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { authCookie } from "../auth";
+import { getSession } from "../sessions.server";
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
-    let cookieString = request.headers.get("Cookie");
-    let userId = await authCookie.parse(cookieString);
-    
-    if (userId)
-    {
+    let session = await getSession(request.headers.get("Cookie"));
+    let userId = session.get("userId");
+
+    if (userId) {
         throw redirect("/home");
     }
 

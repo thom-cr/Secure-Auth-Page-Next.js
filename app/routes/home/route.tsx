@@ -1,6 +1,6 @@
 import { json, useLoaderData } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
-import { requireAuthCookie } from "../../auth";
+import { requireAuthCookie } from "../../sessions.server";
 
 type LoaderData = {
     userId: string;
@@ -9,6 +9,7 @@ type LoaderData = {
 export async function loader({ request }: LoaderFunctionArgs)
 {
     let userId = await requireAuthCookie(request);
+
     return json<LoaderData>({ userId });
 }
 
