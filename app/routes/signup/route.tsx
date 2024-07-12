@@ -1,23 +1,21 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, json, Link, useActionData } from "@remix-run/react";
+import { randomUUID } from "node:crypto";
 
 import { getSession, commitSession, requireAnonymous, destroySession } from "../../sessions.server";
-import { createAccount, mailVerification } from "./queries.server";
-import { validate_email, validate_password } from "./validate.server";
+import { mailVerification } from "./queries.server";
+import { validate_email } from "./validate.server";
 
 interface ValidationErrors
 {
     email?: string;
     code?: string;
-    password?: string;
-    password_check?: string;
-    message?: string;
 }
 
 interface ActionData
 {
     errors?: ValidationErrors;
-    step?: "verify_email" | "verify_code" | "verify_password";
+    step?: "verify_email" | "verify_code";
 }
 
 export async function loader({ request }: LoaderFunctionArgs)
@@ -83,10 +81,12 @@ export async function action({ request }: ActionFunctionArgs)
 
         if (buff_code === v_code)
         {
+            const setup_uuid = randomUUID();
             session.unset("v_code");
             session.unset("v_tries");
+            session.flash("setup", setup_uuid);
             
-            return json<ActionData>({ step: "verify_password" }, {
+            return redirect("/setup", {
                 headers: {
                     "Set-Cookie": await commitSession(session),
                 },
@@ -103,31 +103,6 @@ export async function action({ request }: ActionFunctionArgs)
             });
         }
     }
-
-    if (intent === "verify_password")
-    {
-        const first_name = String(formData.get("first_name"));
-        const last_name = String(formData.get("last_name"));
-        const email = session.get("email");
-        const password = String(formData.get("password"));
-        const password_check = String(formData.get("password_check"));
-
-        let errors = await validate_password(password, password_check);
-
-        if (errors)
-        {
-            return json<ActionData>({ errors, step: "verify_password" }, { status: 400 });
-        }
-
-        let user = await createAccount(first_name, last_name, email, password);
-        session.set("userId", user.id);
-
-        return redirect("/home", {
-            headers: {
-                "Set-Cookie": await commitSession(session),
-            },
-        });
-    }
 }
 
 export const meta = () => {
@@ -141,8 +116,6 @@ export default function Signup()
 
     let codeError = actionResult?.errors?.code;
     let emailError = actionResult?.errors?.email;
-    let passwordError = actionResult?.errors?.password;
-    let passwordCheckError = actionResult?.errors?.password_check;
 
     const input_jumper = (event: React.FormEvent<HTMLInputElement>) => {
         const input = event.currentTarget;
@@ -214,78 +187,6 @@ export default function Signup()
                         </Form>
                         {codeError && <p className="text-red-500 mt-4 font-bold">{codeError}</p>}
                         <div className="left-0 p-4">
-                            <Link to="/">
-                                <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700">Back</button>
-                            </Link>
-                        </div>
-                    </div>
-                ) : step === "verify_password" ? (
-                    <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-                        <Form className="space-y-6" method="post">
-                            <input type="hidden" name="intent" value="verify_password" />
-                            <div>
-                                <label className="block text-sm font-medium leading-6 text-gray-900">
-                                    First Name {" "}
-                                </label>
-                                <input
-                                    autoFocus
-                                    id="first_name"
-                                    name="first_name"
-                                    type="text"
-                                    required
-                                    className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium leading-6 text-gray-900">
-                                    Last Name {" "}
-                                </label>
-                                <input
-                                    id="last_name"
-                                    name="last_name"
-                                    type="text"
-                                    required
-                                    className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-                                    Password {" "}
-                                    {passwordError && (<span className="text-red-500 font-bold"> {passwordError} </span>)}
-                                </label>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    aria-describedby="password-error"
-                                    required
-                                    className="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="password_check" className="block text-sm font-medium leading-6 text-gray-900">
-                                    Password check{" "}
-                                    {passwordCheckError && (<span className="text-red-500 font-bold"> {passwordCheckError} </span>)}
-                                </label>
-                                <input
-                                    id="password_check"
-                                    name="password_check"
-                                    type="password"
-                                    required
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
-                                />
-                            </div>
-
-                            <div>
-                                <button type="submit" className="flex w-full justify-center rounded-md bg-black px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
-                                    Create Account
-                                </button>
-                            </div>
-                        </Form>
-                        <div className="fixed left-0 p-4">
                             <Link to="/">
                                 <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700">Back</button>
                             </Link>

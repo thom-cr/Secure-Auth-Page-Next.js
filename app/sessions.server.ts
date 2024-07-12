@@ -33,6 +33,20 @@ export const requireAnonymous = async (request: Request) => {
     }
 };
 
+export const requireVerified = async (request: Request) => {
+    const session = await getSession(request.headers.get("Cookie"));
+    let setup = session.get("setup");
+
+    if (!setup)
+    {
+        throw redirect("/", {
+            headers: {
+                "Set-Cookie": await commitSession(session),
+            },
+        });
+    }
+}
+
 export async function requireAuthCookie(request: Request)
 {
     let session = await getSession(request.headers.get("Cookie"));
