@@ -1,11 +1,14 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, json, Link, useActionData } from "@remix-run/react";
+import { Form, json, Link, useActionData, useLoaderData } from "@remix-run/react";
 
 import { randomUUID } from "node:crypto";
 
-import { getSession, commitSession, requireAnonymous, destroySession } from "../../sessions.server";
 import { mailVerification } from "./queries.server";
 import { validate_email } from "./validate.server";
+
+import Index from "../_layout";
+
+import { getSession, commitSession, requireAnonymous, destroySession } from "../../sessions.server";
 
 interface ValidationErrors
 {
@@ -19,10 +22,9 @@ interface ActionData
     step?: "verify_email" | "verify_code";
 }
 
-export async function loader({ request }: LoaderFunctionArgs)
+interface LoaderData
 {
-    await requireAnonymous(request);
-    return json({});
+    csrf: string;
 }
 
 export async function loader({ request }: LoaderFunctionArgs)
@@ -121,6 +123,8 @@ export default function Signup()
     const actionResult = useActionData<ActionData>();
     const step = actionResult?.step || "verify_email";
 
+    let { csrf } = useLoaderData<LoaderData>();
+
     let codeError = actionResult?.errors?.code;
     let emailError = actionResult?.errors?.email;
 
@@ -139,6 +143,7 @@ export default function Signup()
     };
 
     return (
+        <Index>
         <div className="flex min-h-full flex-1 flex-col mt-20 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 id="signup-header" className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -149,6 +154,7 @@ export default function Signup()
                 {step === "verify_email" ? (
                     <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                         <Form method="post" className="space-y-6">
+                            <input type="hidden" name="csrf" value={csrf} />
                             <input type="hidden" name="intent" value="verify_email" />
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
@@ -202,5 +208,6 @@ export default function Signup()
                 ) : null}
             </div>
         </div>
+        </Index>
     );
 }

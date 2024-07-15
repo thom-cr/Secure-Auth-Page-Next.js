@@ -1,8 +1,10 @@
 import { type ActionFunctionArgs, json, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 
 import { login } from "./queries.server";
 import { validate } from "./validate.server";
+
+import Index from "../_layout";
 
 import { commitSession, getSession, requireAnonymous } from "../../sessions.server";
 
@@ -16,6 +18,11 @@ interface ValidationErrors
 interface ActionData
 {
     errors?: ValidationErrors;
+}
+
+interface LoaderData
+{
+    csrf: string;
 }
 
 export const meta = () =>
@@ -63,9 +70,11 @@ export async function action({ request }: ActionFunctionArgs)
 
 export default function Signup() {
     let actionResult = useActionData<typeof action>();
+    let { csrf } = useLoaderData<LoaderData>();
   
     return (
         <>
+          <Index>
           <div className="flex min-h-full flex-1 flex-col justify-center pb-12 sm:px-6 lg:px-8">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
                     <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -76,6 +85,7 @@ export default function Signup() {
             <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
                 <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                     <Form className="space-y-6" method="post">
+                        <input type="hidden" name="csrf" value={csrf} />
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
                                 Email address{" "}
@@ -178,6 +188,7 @@ export default function Signup() {
                 </div>
             </div>
           </div>
+          </Index>
       </>
     );
   }

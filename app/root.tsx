@@ -9,7 +9,7 @@ import {
 } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-import { getSession, commitSession, requireAuthCookie } from "./sessions.server";
+import { getSession } from "./sessions.server";
 
 import "./styles.css";
 

@@ -1,8 +1,11 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useActionData, Form, Link, json, redirect } from "@remix-run/react";
-import { getSession, commitSession, requireAnonymous, requireVerified } from "../../sessions.server";
+import { useActionData, Form, Link, json, redirect, useLoaderData } from "@remix-run/react";
+
 import { createAccount } from "../signup/queries.server";
+import Index from "../_layout";
 import { validate_password } from "../signup/validate.server";
+
+import { getSession, commitSession, requireAnonymous, requireVerified } from "../../sessions.server";
 
 interface ValidationErrors
 {
@@ -14,6 +17,11 @@ interface ValidationErrors
 interface ActionData
 {
     errors?: ValidationErrors;
+}
+
+interface LoaderData
+{
+    csrf: string;
 }
 
 export async function loader({ request }: LoaderFunctionArgs)
@@ -55,10 +63,13 @@ export default function Setup()
 {
     const actionResult = useActionData<ActionData>();
 
+    let { csrf } = useLoaderData<LoaderData>();
+
     let passwordError = actionResult?.errors?.password;
     let passwordCheckError = actionResult?.errors?.password_check;
 
     return (
+        <Index>
         <div className="flex min-h-full flex-1 flex-col mt-20 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 id="signup-header" className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -68,6 +79,7 @@ export default function Setup()
                 <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
                     <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                         <Form className="space-y-6" method="post">
+                            <input type="hidden" name="csrf" value={csrf} />
                             <div>
                                 <label className="block text-sm font-medium leading-6 text-gray-900">
                                     First Name {" "}
@@ -138,5 +150,6 @@ export default function Setup()
                     </div>
                 </div>
         </div>
+        </Index>
     );
 }

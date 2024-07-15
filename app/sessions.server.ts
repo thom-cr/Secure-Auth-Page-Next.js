@@ -1,4 +1,5 @@
 import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import { randomBytes } from "node:crypto";
 
 let secret = process.env.COOKIE_SECRET || "default";
 
@@ -47,6 +48,11 @@ export const requireVerified = async (request: Request) => {
     }
 }
 
+export function csrf_token()
+{
+    return randomBytes(100).toString("base64");
+}
+
 export async function requireAuthCookie(request: Request)
 {
     let session = await getSession(request.headers.get("Cookie"));
@@ -62,4 +68,15 @@ export async function requireAuthCookie(request: Request)
     }
 
     return userId;
+}
+
+export async function csrf_validation(request: Request)
+{
+    const session = await getSession(request.headers.get("Cookie"));
+    const formData = await request.formData();
+    const csrf = formData.get("csrf");
+
+    if (!session.has("csrf")) throw new Error("CSRF Token not included.");
+    if (!csrf) throw new Error("CSRF Token not included.");
+    if (csrf !== session.get("csrf")) throw new Error("CSRF tokens do not match.");
 }
