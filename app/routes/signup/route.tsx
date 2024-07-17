@@ -1,12 +1,8 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, json, Link, useActionData, useLoaderData } from "@remix-run/react";
-
-import { randomUUID } from "node:crypto";
-
-import { mailVerification } from "./queries.server";
+import { getSession, commitSession, requireAnonymous, destroySession, csrf_validation, csrf_token, setup_uuid } from "../../sessions.server";
+import { createAccount, mailVerification } from "./queries.server";
 import { validate_email } from "./validate.server";
-
-import { getSession, commitSession, requireAnonymous, destroySession, csrf_validation, csrf_token } from "../../sessions.server";
 
 interface ValidationErrors
 {
@@ -118,10 +114,14 @@ export async function action({ request }: ActionFunctionArgs)
 
         if (buff_code === v_code)
         {
-            const setup_uuid = randomUUID();
+            const email = session.get("email");
+
             session.unset("v_code");
             session.unset("v_tries");
             session.flash("setup", setup_uuid);
+
+            let user = await createAccount(email);
+            session.set("userId", user.id);
             
             return redirect("/setup", {
                 headers: {

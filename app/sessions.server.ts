@@ -1,5 +1,5 @@
 import { createCookieSessionStorage, redirect, Session } from "@remix-run/node";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 
 let secret = process.env.COOKIE_SECRET || "default";
 
@@ -19,6 +19,8 @@ export const { getSession, commitSession, destroySession } = createCookieSession
         maxAge: 2592000,
     }
 });
+
+export const setup_uuid = randomUUID();
 
 export const requireAnonymous = async (request: Request) => {
     const session = await getSession(request.headers.get("Cookie"));
@@ -65,6 +67,20 @@ export function csrf_token(session: Session)
     {
         console.error("Error generating CSRF token:", error);
         return undefined;
+     }
+}
+
+export const requireId = async (request: Request) => {
+    const session = await getSession(request.headers.get("Cookie"));
+    let user_id = session.get("userId");
+
+    if (!user_id)
+    {
+        throw redirect("/", {
+            headers: {
+                "Set-Cookie": await commitSession(session),
+            },
+        });
     }
 }
 
