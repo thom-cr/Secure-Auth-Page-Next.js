@@ -4,9 +4,7 @@ import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { login } from "./queries.server";
 import { validate } from "./validate.server";
 
-import Index from "../_layout";
-
-import { commitSession, getSession, requireAnonymous } from "../../sessions.server";
+import { commitSession, csrf_token, csrf_validation, getSession, requireAnonymous } from "../../sessions.server";
 
 interface ValidationErrors
 {
@@ -22,7 +20,7 @@ interface ActionData
 
 interface LoaderData
 {
-    csrf: string;
+    csrf: any;
 }
 
 export const meta = () =>
@@ -33,22 +31,42 @@ export const meta = () =>
 export async function loader({ request }: LoaderFunctionArgs)
 {
     await requireAnonymous(request);
-    return json({});
+
+    const session = await getSession(request.headers.get("Cookie"));
+    const csrf = csrf_token(session);
+
+    return json<LoaderData>({ csrf });
 }
 
 export async function action({ request }: ActionFunctionArgs)
 {
-    let formData = await request.formData();
-    let email = String(formData.get("email"));
-    let password = String(formData.get("password"));
-    let errors = validate(email, password);
+    const formData = await request.formData();
+    const session = await getSession(request.headers.get("Cookie"));
+
+    try
+    {
+        await csrf_validation(request, formData);
+    }
+    catch (error)
+    {
+        console.log("CSRF validation error:", error);
+        session.flash("error", "CSRF Token ERROR");
+
+        return redirect("/login", {
+          headers: { "Set-Cookie": await commitSession(session) },
+        });
+    }
+
+    const email = String(formData.get("email"));
+    const password = String(formData.get("password"));
+    const errors = validate(email, password);
     
     if (errors)
     {
         return json<ActionData>({ errors }, 400);
     }
 
-    let userId = await login(email, password);
+    const userId = await login(email, password);
 
     if (!userId)
     {
@@ -58,7 +76,6 @@ export async function action({ request }: ActionFunctionArgs)
         );
     }
 
-    const session = await getSession(request.headers.get("Cookie"));
     session.set("userId", userId);
     
     return redirect("/home", {
@@ -74,7 +91,6 @@ export default function Signup() {
   
     return (
         <>
-          <Index>
           <div className="flex min-h-full flex-1 flex-col justify-center pb-12 sm:px-6 lg:px-8">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
                     <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -188,7 +204,6 @@ export default function Signup() {
                 </div>
             </div>
           </div>
-          </Index>
       </>
     );
   }

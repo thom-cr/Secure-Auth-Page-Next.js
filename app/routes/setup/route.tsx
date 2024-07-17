@@ -2,10 +2,9 @@ import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { useActionData, Form, Link, json, redirect, useLoaderData } from "@remix-run/react";
 
 import { createAccount } from "../signup/queries.server";
-import Index from "../_layout";
 import { validate_password } from "../signup/validate.server";
 
-import { getSession, commitSession, requireAnonymous, requireVerified } from "../../sessions.server";
+import { getSession, commitSession, requireAnonymous, requireVerified, csrf_validation, destroySession, csrf_token } from "../../sessions.server";
 
 interface ValidationErrors
 {
@@ -21,20 +20,37 @@ interface ActionData
 
 interface LoaderData
 {
-    csrf: string;
+    csrf: any;
 }
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
     await requireAnonymous(request);
     await requireVerified(request);
-    return json({});
+    
+    const session = await getSession(request.headers.get("Cookie"));
+    const csrf = csrf_token(session);
+
+    return json<LoaderData>({ csrf });
 }
 
 export async function action({ request }: ActionFunctionArgs)
 {
     const formData = await request.formData();
     const session = await getSession(request.headers.get("Cookie"));
+
+    try
+    {
+        await csrf_validation(request, formData);
+    }
+    catch (error)
+    {
+        session.flash("error", "/!\\ CSRF Token ERROR /!\\");
+
+        return redirect("/", {
+          headers: { "Set-Cookie": await destroySession(session) },
+        });
+    }
 
     const first_name = String(formData.get("first_name"));
     const last_name = String(formData.get("last_name"));
@@ -69,7 +85,6 @@ export default function Setup()
     let passwordCheckError = actionResult?.errors?.password_check;
 
     return (
-        <Index>
         <div className="flex min-h-full flex-1 flex-col mt-20 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 id="signup-header" className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -150,6 +165,5 @@ export default function Setup()
                     </div>
                 </div>
         </div>
-        </Index>
     );
 }

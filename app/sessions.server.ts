@@ -1,4 +1,4 @@
-import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import { createCookieSessionStorage, redirect, Session } from "@remix-run/node";
 import { randomBytes } from "node:crypto";
 
 let secret = process.env.COOKIE_SECRET || "default";
@@ -48,9 +48,24 @@ export const requireVerified = async (request: Request) => {
     }
 }
 
-export function csrf_token()
+export function csrf_token(session: Session)
 {
-    return randomBytes(100).toString("base64");
+    try
+    {
+        const csrf = session.get("csrf");
+
+        if(csrf)
+        {
+            return csrf;
+        }
+        const token = randomBytes(16).toString("hex");
+        return token;
+    }
+    catch (error)
+    {
+        console.error("Error generating CSRF token:", error);
+        return undefined;
+    }
 }
 
 export async function requireAuthCookie(request: Request)
@@ -70,13 +85,18 @@ export async function requireAuthCookie(request: Request)
     return userId;
 }
 
-export async function csrf_validation(request: Request)
+export async function csrf_validation(request: Request, formData: FormData)
 {
     const session = await getSession(request.headers.get("Cookie"));
-    const formData = await request.formData();
-    const csrf = formData.get("csrf");
+    const csrf_token = session.get("csrf");
+    const csrf_form = formData.get("csrf");
 
-    if (!session.has("csrf")) throw new Error("CSRF Token not included.");
-    if (!csrf) throw new Error("CSRF Token not included.");
-    if (csrf !== session.get("csrf")) throw new Error("CSRF tokens do not match.");
+    if (!csrf_token)
+    {
+        throw new Error("CSRF Token not included.");
+    }
+    if (csrf_token !== csrf_form)
+    {
+        throw new Error("CSRF Token diff.");
+    }
 }

@@ -6,9 +6,7 @@ import { randomUUID } from "node:crypto";
 import { mailVerification } from "./queries.server";
 import { validate_email } from "./validate.server";
 
-import Index from "../_layout";
-
-import { getSession, commitSession, requireAnonymous, destroySession } from "../../sessions.server";
+import { getSession, commitSession, requireAnonymous, destroySession, csrf_validation, csrf_token } from "../../sessions.server";
 
 interface ValidationErrors
 {
@@ -24,13 +22,17 @@ interface ActionData
 
 interface LoaderData
 {
-    csrf: string;
+    csrf: any;
 }
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
     await requireAnonymous(request);
-    return json({});
+
+    const session = await getSession(request.headers.get("Cookie"));
+    const csrf = csrf_token(session);
+    
+    return json<LoaderData>({ csrf });
 }
 
 export async function action({ request }: ActionFunctionArgs)
@@ -41,6 +43,19 @@ export async function action({ request }: ActionFunctionArgs)
 
     if (intent === "verify_email")
     {
+        try
+        {
+            await csrf_validation(request, formData);
+        }
+        catch (error)
+        {
+            session.flash("error", "/!\\ CSRF Token ERROR /!\\");
+
+            return redirect("/", {
+            headers: { "Set-Cookie": await commitSession(session) },
+            });
+        }
+
         const email = String(formData.get("email"));
 
         let errors = await validate_email(email);
@@ -68,6 +83,19 @@ export async function action({ request }: ActionFunctionArgs)
         const v_code = session.get("v_code");
         const buff_code = `${formData.get('digit1')}${formData.get('digit2')}${formData.get('digit3')}${formData.get('digit4')}${formData.get('digit5')}${formData.get('digit6')}`;
         const v_tries = session.get("v_tries") || 0;
+
+        try
+        {
+            await csrf_validation(request, formData);
+        }
+        catch (error)
+        {
+            session.flash("error", "/!\\ CSRF Token ERROR /!\\");
+
+            return redirect("/", {
+            headers: { "Set-Cookie": await destroySession(session) },
+            });
+        }
 
         if(process.env.NODE_ENV === "development")
         {
@@ -143,7 +171,6 @@ export default function Signup()
     };
 
     return (
-        <Index>
         <div className="flex min-h-full flex-1 flex-col mt-20 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 id="signup-header" className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -186,6 +213,7 @@ export default function Signup()
                 ) : step === "verify_code" ? (
                     <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                         <Form method="post" className="space-y-6">
+                            <input type="hidden" name="csrf" value={csrf} />
                             <input type="hidden" name="intent" value="verify_code" />
                                 <div className="flex space-x-2 justify-center">
                                     {[...Array(6)].map((_, i) => (
@@ -208,6 +236,5 @@ export default function Signup()
                 ) : null}
             </div>
         </div>
-        </Index>
     );
 }
