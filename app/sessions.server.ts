@@ -1,4 +1,5 @@
 import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import { randomUUID } from "node:crypto";
 
 let secret = process.env.COOKIE_SECRET || "default";
 
@@ -19,6 +20,8 @@ export const { getSession, commitSession, destroySession } = createCookieSession
     }
 });
 
+export const setup_uuid = randomUUID();
+
 export const requireAnonymous = async (request: Request) => {
     const session = await getSession(request.headers.get("Cookie"));
     let user_id = session.get("userId");
@@ -32,6 +35,34 @@ export const requireAnonymous = async (request: Request) => {
         });
     }
 };
+
+export const requireVerified = async (request: Request) => {
+    const session = await getSession(request.headers.get("Cookie"));
+    let setup = session.get("setup");
+
+    if (!setup)
+    {
+        throw redirect("/", {
+            headers: {
+                "Set-Cookie": await commitSession(session),
+            },
+        });
+    }
+}
+
+export const requireId = async (request: Request) => {
+    const session = await getSession(request.headers.get("Cookie"));
+    let user_id = session.get("userId");
+
+    if (!user_id)
+    {
+        throw redirect("/", {
+            headers: {
+                "Set-Cookie": await commitSession(session),
+            },
+        });
+    }
+}
 
 export async function requireAuthCookie(request: Request)
 {
