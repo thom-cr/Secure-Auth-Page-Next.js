@@ -15,7 +15,6 @@ import { commitSession, csrf_token, getSession } from "./sessions.server";
 import "./styles.css";
 interface LoaderData
 {
-    csrf?: any;
     userId?: string;
 }
 
@@ -24,16 +23,8 @@ export async function loader({ request }: LoaderFunctionArgs)
 {
     const session = await getSession(request.headers.get("Cookie"));
     const userId = session.get("userId");
-    const csrf = csrf_token(session);
 
-    if(process.env.NODE_ENV === "development")
-    {
-        console.log("CSRF Token:", csrf);
-    }
-            
-    session.set("csrf", csrf);
-    
-    return json<LoaderData>( { userId, csrf }, { headers: { "Set-Cookie": await commitSession(session)}});
+    return json<LoaderData>( { userId }, { headers: { "Set-Cookie": await commitSession(session)}});
 }
 
 export const meta = () =>
@@ -43,7 +34,7 @@ export const meta = () =>
 
 export default function App()
 {
-    let { userId, csrf } = useLoaderData<typeof loader>();
+    let { userId } = useLoaderData<typeof loader>();
 
     const location = useLocation();
     const isRoot = location.pathname === "/";
