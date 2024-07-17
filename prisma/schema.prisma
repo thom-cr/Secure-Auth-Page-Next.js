@@ -9,15 +9,15 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model Account {
   id         String @id @default(uuid())
   email      String @unique
-  first_name String
-  last_name  String
+  first_name String ?
+  last_name  String ?
 
   Password Password?
 }

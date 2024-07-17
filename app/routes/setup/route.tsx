@@ -1,8 +1,8 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { useActionData, Form, Link, json, redirect } from "@remix-run/react";
-import { getSession, commitSession, requireAnonymous, requireVerified } from "../../sessions.server";
-import { createAccount } from "../signup/queries.server";
+import { getSession, commitSession, requireVerified, requireId } from "../../sessions.server";
 import { validate_password } from "../signup/validate.server";
+import { setupAccount } from "./queries.server";
 
 interface ValidationErrors
 {
@@ -18,8 +18,8 @@ interface ActionData
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
-    await requireAnonymous(request);
     await requireVerified(request);
+    await requireId(request);
     return json({});
 }
 
@@ -28,9 +28,9 @@ export async function action({ request }: ActionFunctionArgs)
     const formData = await request.formData();
     const session = await getSession(request.headers.get("Cookie"));
 
+    const user_id = session.get("userId");
     const first_name = String(formData.get("first_name"));
     const last_name = String(formData.get("last_name"));
-    const email = session.get("email");
     const password = String(formData.get("password"));
     const password_check = String(formData.get("password_check"));
 
@@ -40,9 +40,8 @@ export async function action({ request }: ActionFunctionArgs)
     {
         return json<ActionData>({ errors }, { status: 400 });
     }
-
-    let user = await createAccount(first_name, last_name, email, password);
-    session.set("userId", user.id);
+    
+    await setupAccount(first_name, last_name, password, user_id);
 
     return redirect("/home", {
         headers: {
