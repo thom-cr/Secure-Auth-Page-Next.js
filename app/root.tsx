@@ -1,15 +1,7 @@
-import {
-    Link,
-    Links,
-    Meta,
-    Outlet,
-    Scripts,
-    useLoaderData,
-    useLocation
-} from "@remix-run/react";
+import { Link, Links, Meta, Outlet, Scripts, useLoaderData, useLocation } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-import { getSession, commitSession, requireAuthCookie } from "./sessions.server";
+import { getSession } from "./sessions.server";
 
 import "./styles.css";
 

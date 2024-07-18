@@ -25,6 +25,7 @@ export const meta = () =>
 export async function loader({ request }: LoaderFunctionArgs)
 {
     await requireAnonymous(request);
+
     return json({});
 }
 
