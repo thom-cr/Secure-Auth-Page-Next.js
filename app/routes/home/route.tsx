@@ -1,16 +1,19 @@
 import { json, useLoaderData } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
-import { requireAuthCookie } from "../../sessions.server";
+import { getSession, requireAuthCookie } from "../../sessions.server";
+import { full_name } from "./queries.server";
 
 type LoaderData = {
     userId: string;
+    name: string;
 };
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
-    let userId = await requireAuthCookie(request);
+    const userId = await requireAuthCookie(request);
+    const name = await full_name(userId);
 
-    return json<LoaderData>({ userId });
+    return json<LoaderData>({ userId, name });
 }
 
 export const meta = () =>
@@ -20,7 +23,7 @@ export const meta = () =>
 
 export default function HomePage()
 {
-    const { userId } = useLoaderData<LoaderData>();
+    const { userId, name } = useLoaderData<LoaderData>();
 
     return (
         <div className="flex flex-col items-center justify-start h-screen">
@@ -32,8 +35,9 @@ export default function HomePage()
                 </form>
             </div>
             <h1 className="text-black text-4xl font-bold mt-8 text-center">
-                Welcome Home, <br />{userId}
+                Welcome Home, <br />{name}
             </h1>
+            <p className="text-black text-4xl font-bold mt-8 text-center">ID : {userId}</p>
         </div>
     );
 }

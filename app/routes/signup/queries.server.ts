@@ -19,12 +19,15 @@ export async function mailVerification(email: string)
     const buff = crypto.randomBytes(3);
     const v_code = parseInt(buff.toString('hex'), 16).toString().padStart(6, '0').substring(0, 6);
 
-    await resend.emails.send({
-        from: 'send@fooduhav.com',
-        to: email,
-        subject: 'Mail Verification',
-        html: `<p>Your verification code is <strong>${v_code}</strong></p>`,
-    });
+    if (process.env.NODE_ENV === "production")
+    {
+        await resend.emails.send({
+            from: 'send@fooduhav.com',
+            to: email,
+            subject: 'Mail Verification',
+            html: `<p>Your verification code is <strong>${v_code}</strong></p>`,
+        });
+    }
     
     if(process.env.NODE_ENV === "development")
     {

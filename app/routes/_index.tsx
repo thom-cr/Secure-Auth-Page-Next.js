@@ -6,7 +6,8 @@ export async function loader({ request }: LoaderFunctionArgs)
     let session = await getSession(request.headers.get("Cookie"));
     let userId = session.get("userId");
 
-    if (userId) {
+    if (userId)
+    {
         throw redirect("/home");
     }
 
