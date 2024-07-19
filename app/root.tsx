@@ -1,7 +1,7 @@
 import { json, Link, Links, Meta, Outlet, Scripts, useLoaderData, useLocation } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-import { commitSession, getSession } from "./routes/server/sessions.server";
+import { commitSession, getSession } from "./server/sessions.server"
 
 import "./styles.css";
 
@@ -9,6 +9,7 @@ interface LoaderData
 {
     userId?: string;
 }
+
 
 export async function loader({ request }: LoaderFunctionArgs)
 {

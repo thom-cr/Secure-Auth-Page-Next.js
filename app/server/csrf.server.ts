@@ -1,27 +1,25 @@
 import { Session } from "@remix-run/node";
 import { randomBytes } from "node:crypto";
 
-import { getSession } from "./sessions.server";
+import { commitSession, getSession } from "./sessions.server";
 
 export function csrf_token(session: Session)
 {
-    try
-    {
-        const csrf = session.get("csrf");
+    const token = randomBytes(16).toString("hex");
+    let csrf = session.get("csrf");
 
-        if(csrf)
-        {
-            return csrf;
-        }
-        const token = randomBytes(16).toString("hex");
+    if (!csrf)
+    {
+        session.set("csrf", token);
+        
+        commitSession(session);
+
         return token;
     }
-    catch (error)
-    {
-        console.error("Error generating CSRF token:", error);
-        return undefined;
-     }
+
+    return csrf;
 }
+
 export async function csrf_validation(request: Request, formData: FormData)
 {
     const session = await getSession(request.headers.get("Cookie"));

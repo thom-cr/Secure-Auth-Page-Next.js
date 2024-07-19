@@ -1,7 +1,7 @@
 import { json, useLoaderData } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-import { requireAuthCookie } from "../server/required.server";
+import { requireAuthCookie } from "../../server/required.server";
 
 import { full_name } from "./queries.server";
 

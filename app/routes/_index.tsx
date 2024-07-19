@@ -1,6 +1,6 @@
 import { json, LoaderFunctionArgs } from "@remix-run/node";
 
-import { requireAnonymous } from "./server/required.server";
+import { requireAnonymous } from "../server/required.server";
 
 export async function loader({ request }: LoaderFunctionArgs)
 {

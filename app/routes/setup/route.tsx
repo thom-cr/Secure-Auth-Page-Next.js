@@ -1,9 +1,9 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, json, Link, redirect,  useActionData, useLoaderData } from "@remix-run/react";
-import { commitSession, destroySession, getSession } from "../server/sessions.server";
+import { commitSession, destroySession, getSession } from "../../server/sessions.server";
 
-import { csrf_token, csrf_validation } from "../server/csrf.server";
-import { requireId, requireVerified } from "../server/required.server";
+import { csrf_token, csrf_validation } from "../../server/csrf.server";
+import { requireId, requireVerified } from "../../server/required.server";
 
 import { setupAccount } from "./queries.server";
 import { validate_password } from "./validate.server";
@@ -33,7 +33,11 @@ export async function loader({ request }: LoaderFunctionArgs)
     const session = await getSession(request.headers.get("Cookie"));
     const csrf = csrf_token(session);
 
-    return json<LoaderData>({ csrf });
+    return json<LoaderData>({ csrf }, {
+        headers: {
+            "Set-Cookie": await commitSession(session),
+        },
+    });
 }
 
 export async function action({ request }: ActionFunctionArgs)
