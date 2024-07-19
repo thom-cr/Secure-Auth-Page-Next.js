@@ -1,17 +1,12 @@
-import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { getSession } from "../sessions.server";
+import { json, LoaderFunctionArgs } from "@remix-run/node";
+
+import { requireAnonymous } from "./server/required.server";
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
-    let session = await getSession(request.headers.get("Cookie"));
-    let userId = session.get("userId");
+    await requireAnonymous(request);
 
-    if (userId)
-    {
-        throw redirect("/home");
-    }
-
-    return null;
+    return json({});
 }
 
 export default function Index()

@@ -1,17 +1,12 @@
 import { type ActionFunctionArgs, json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 
+import { csrf_token, csrf_validation } from "../server/csrf.server";
+import { requireAnonymous } from "../server/required.server";
+import { commitSession, getSession } from "../server/sessions.server";
+
 import { login } from "./queries.server";
 import { validate } from "./validate.server";
-
-import { commitSession, csrf_token, csrf_validation, getSession, requireAnonymous } from "../../sessions.server";
-
-interface ValidationErrors
-{
-    email?: string;
-    password?: string;
-    message?: string;
-}
   
 interface ActionData
 {
@@ -21,6 +16,13 @@ interface ActionData
 interface LoaderData
 {
     csrf: any;
+}
+
+interface ValidationErrors
+{
+    email?: string;
+    password?: string;
+    message?: string;
 }
 
 export const meta = () =>
@@ -50,7 +52,6 @@ export async function action({ request }: ActionFunctionArgs)
     catch (error)
     {
         console.log("CSRF validation error:", error);
-        session.flash("error", "CSRF Token ERROR");
 
         return redirect("/login", {
           headers: { "Set-Cookie": await commitSession(session) },

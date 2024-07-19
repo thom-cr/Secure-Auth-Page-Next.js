@@ -14,6 +14,17 @@ export async function accountExists(email: string)
     return Boolean(account);
 }
 
+export async function createAccount(email: string)
+{
+    return prisma.account.create({
+        data: {
+            first_name: "",
+            last_name: "",
+            email: email,
+        },
+    });
+}
+
 export async function mailVerification(email: string)
 {
     const buff = crypto.randomBytes(3);
@@ -35,15 +46,4 @@ export async function mailVerification(email: string)
     }
 
     return v_code;
-}
-
-export async function createAccount(email: string)
-{
-    return prisma.account.create({
-        data: {
-            first_name: "",
-            last_name: "",
-            email: email,
-        },
-    });
 }

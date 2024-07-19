@@ -1,14 +1,12 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, json, Link, useActionData, useLoaderData } from "@remix-run/react";
-import { getSession, commitSession, requireAnonymous, destroySession, csrf_validation, csrf_token, setup_uuid } from "../../sessions.server";
+
+import { csrf_token, csrf_validation } from "../server/csrf.server";
+import { requireAnonymous } from "../server/required.server";
+import { commitSession, destroySession, getSession, setup_uuid } from "../server/sessions.server";
+
 import { createAccount, mailVerification } from "./queries.server";
 import { validate_email } from "./validate.server";
-
-interface ValidationErrors
-{
-    email?: string;
-    code?: string;
-}
 
 interface ActionData
 {
@@ -19,6 +17,12 @@ interface ActionData
 interface LoaderData
 {
     csrf: any;
+}
+
+interface ValidationErrors
+{
+    email?: string;
+    code?: string;
 }
 
 export async function loader({ request }: LoaderFunctionArgs)
@@ -120,7 +124,7 @@ export async function action({ request }: ActionFunctionArgs)
             session.unset("v_tries");
             session.flash("setup", setup_uuid);
 
-            let user = await createAccount(email);
+            const user = await createAccount(email);
             session.set("userId", user.id);
             
             return redirect("/setup", {
@@ -151,7 +155,7 @@ export default function Signup()
     const actionResult = useActionData<ActionData>();
     const step = actionResult?.step || "verify_email";
 
-    let { csrf } = useLoaderData<LoaderData>();
+    const { csrf } = useLoaderData<LoaderData>();
 
     let codeError = actionResult?.errors?.code;
     let emailError = actionResult?.errors?.email;

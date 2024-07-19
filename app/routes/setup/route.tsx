@@ -1,15 +1,12 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useActionData, Form, Link, json, redirect, useLoaderData } from "@remix-run/react";
-import { getSession, commitSession, requireId, requireVerified, csrf_validation, destroySession, csrf_token } from "../../sessions.server";
-import { validate_password } from "../signup/validate.server";
-import { setupAccount } from "./queries.server";
+import { Form, json, Link, redirect,  useActionData, useLoaderData } from "@remix-run/react";
+import { commitSession, destroySession, getSession } from "../server/sessions.server";
 
-interface ValidationErrors
-{
-    password?: string;
-    password_check?: string;
-    message?: string;
-}
+import { csrf_token, csrf_validation } from "../server/csrf.server";
+import { requireId, requireVerified } from "../server/required.server";
+
+import { setupAccount } from "./queries.server";
+import { validate_password } from "./validate.server";
 
 interface ActionData
 {
@@ -19,6 +16,13 @@ interface ActionData
 interface LoaderData
 {
     csrf: any;
+}
+
+interface ValidationErrors
+{
+    password?: string;
+    password_check?: string;
+    message?: string;
 }
 
 export async function loader({ request }: LoaderFunctionArgs)
