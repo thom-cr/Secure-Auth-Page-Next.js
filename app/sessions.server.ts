@@ -52,22 +52,19 @@ export const requireVerified = async (request: Request) => {
 
 export function csrf_token(session: Session)
 {
-    try
-    {
-        const csrf = session.get("csrf");
+    const token = randomBytes(16).toString("hex");
+    let csrf = session.get("csrf");
 
-        if(csrf)
-        {
-            return csrf;
-        }
-        const token = randomBytes(16).toString("hex");
+    if (!csrf)
+    {
+        session.set("csrf", token);
+        
+        commitSession(session);
+
         return token;
     }
-    catch (error)
-    {
-        console.error("Error generating CSRF token:", error);
-        return undefined;
-     }
+
+    return csrf;
 }
 
 export const requireId = async (request: Request) => {
