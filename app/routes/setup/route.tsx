@@ -38,6 +38,11 @@ export async function loader({ request }: LoaderFunctionArgs)
             "Set-Cookie": await commitSession(session),
         },
     });
+    return json<LoaderData>({ csrf }, {
+        headers: {
+            "Set-Cookie": await commitSession(session),
+        },
+    });
 }
 
 export async function action({ request }: ActionFunctionArgs)

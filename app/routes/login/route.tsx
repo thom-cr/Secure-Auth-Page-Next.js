@@ -35,7 +35,7 @@ export async function loader({ request }: LoaderFunctionArgs)
     await requireAnonymous(request);
 
     const session = await getSession(request.headers.get("Cookie"));
-    const csrf = csrf_token(session);
+    let csrf = csrf_token(session);
 
     return json<LoaderData>({ csrf }, {
         headers: {
