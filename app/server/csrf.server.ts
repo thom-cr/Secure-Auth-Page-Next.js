@@ -5,33 +5,54 @@ import { commitSession, getSession } from "./sessions.server";
 
 export function csrf_token(session: Session)
 {
-    const token = randomBytes(16).toString("hex");
-    let csrf = session.get("csrf");
-
-    if (!csrf)
+    try
     {
-        session.set("csrf", token);
+        const token = randomBytes(16).toString("hex");
+        let csrf = session.get("csrf");
+
+        if (!csrf)
+        {
+            session.set("csrf", token);
         
-        commitSession(session);
+            commitSession(session);
 
-        return token;
+            return token;
+        }
+
+        return csrf;
     }
-
-    return csrf;
+    catch (error)
+    {
+        if (process.env.NODE_ENV === "development")
+        {
+            console.error("CSRF TOKEN GENERATION ERROR :", error);
+        }
+        return undefined;
+    }
 }
 
 export async function csrf_validation(request: Request, formData: FormData)
 {
-    const session = await getSession(request.headers.get("Cookie"));
-    const csrf_token = session.get("csrf");
-    const csrf_form = formData.get("csrf");
+    try
+    {
+        const session = await getSession(request.headers.get("Cookie"));
+        const csrf_token = session.get("csrf");
+        const csrf_form = formData.get("csrf");
 
-    if (!csrf_token)
-    {
-        throw new Error("CSRF Token not included.");
+        if (!csrf_token)
+        {
+            throw new Error("CSRF Token not included.");
+        }
+        if (csrf_token !== csrf_form)
+        {
+            throw new Error("CSRF Token diff.");
+        }
     }
-    if (csrf_token !== csrf_form)
+    catch (error)
     {
-        throw new Error("CSRF Token diff.");
+        if (process.env.NODE_ENV === "development")
+        {
+            console.error("CSRF VALIDATION ERROR", error);
+        }
     }
 }

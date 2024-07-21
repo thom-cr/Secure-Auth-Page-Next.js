@@ -42,7 +42,7 @@ export async function mailVerification(email: string)
     
     if(process.env.NODE_ENV === "development")
     {
-        console.log(`Generated code : ${v_code}`);
+        console.log(`GENERATED CODE : ${v_code}`);
     }
 
     return v_code;

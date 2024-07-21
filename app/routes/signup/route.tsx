@@ -53,7 +53,10 @@ export async function action({ request }: ActionFunctionArgs)
         }
         catch (error)
         {
-            session.flash("error", "/!\\ CSRF Token ERROR /!\\");
+            if (process.env.NODE_ENV === "development")
+            {
+                console.error(`CSRF VALIDATION ERROR : ${error}`);
+            }
 
             return redirect("/", {
             headers: { "Set-Cookie": await commitSession(session) },
@@ -94,7 +97,10 @@ export async function action({ request }: ActionFunctionArgs)
         }
         catch (error)
         {
-            session.flash("error", "/!\\ CSRF Token ERROR /!\\");
+            if (process.env.NODE_ENV === "development")
+            {
+                console.error("CSRF VALIDATION ERROR :", error);
+            }
 
             return redirect("/", {
             headers: { "Set-Cookie": await destroySession(session) },

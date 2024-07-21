@@ -55,7 +55,10 @@ export async function action({ request }: ActionFunctionArgs)
     }
     catch (error)
     {
-        console.log("CSRF validation error:", error);
+        if (process.env.NODE_ENV === "development")
+        {
+            console.error("CSRF VALIDATION ERROR :", error);
+        }
 
         return redirect("/login", {
           headers: { "Set-Cookie": await commitSession(session) },
