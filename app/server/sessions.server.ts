@@ -9,15 +9,20 @@ if (secret === "default")
     secret = "default-secret";
 }
 
-export const { getSession, commitSession, destroySession } = createCookieSessionStorage({
-    cookie: {
-        httpOnly: true,
-        path: "/",
-        sameSite: "lax",
-        secrets: [secret],
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 2592000,
-    }
-});
-
 export const setup_uuid = randomUUID();
+
+export let sessionStorage = createCookieSessionStorage({
+    cookie: {
+      name: "_session",
+      sameSite: "lax",
+      path: "/",
+      httpOnly: true,
+      secrets: [secret],
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 2592000,
+    },
+  });
+  
+  // you can also export the methods individually for your own usage
+  export let { getSession, commitSession, destroySession } = sessionStorage;
+  
