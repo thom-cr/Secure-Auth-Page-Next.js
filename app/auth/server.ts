@@ -19,21 +19,12 @@ import type {
   PublicKeyCredentialDescriptorJSON,
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
+import { Authenticator } from "@prisma/client";
+import { Account } from "@prisma/client";
 
 interface WebAuthnAuthenticator {
   credentialID: string;
   transports: string[];
-}
-
-export interface Authenticator {
-  credentialID: string;
-  userId: string;
-  credentialPublicKey: string;
-  counter: number;
-  credentialDeviceType: string;
-  credentialBackedUp: boolean;
-  transports: string;
-  aaguid: string;
 }
 
 export interface UserDetails {
@@ -61,7 +52,7 @@ export interface WebAuthnOptionsResponse {
  * This interface declares what configuration the strategy needs from the
  * developer to correctly work.
  */
-export interface WebAuthnOptions<User> {
+export interface WebAuthnOptions<Account> {
   /**
    * Relaying Party name - The human-readable name of your app
    */
@@ -90,7 +81,7 @@ export interface WebAuthnOptions<User> {
    * @returns Authenticator
    */
   getUserAuthenticators: (
-    user: User | null
+    user: Account | null
   ) => Promise<WebAuthnAuthenticator[]> | WebAuthnAuthenticator[];
   /**
    * Transform the user object into the shape expected by the strategy.
@@ -99,7 +90,7 @@ export interface WebAuthnOptions<User> {
    * @returns UserDetails
    */
   getUserDetails: (
-    user: User | null
+    user: Account | null
   ) => Promise<UserDetails | null> | UserDetails | null;
 
   /**
@@ -107,7 +98,7 @@ export interface WebAuthnOptions<User> {
    * @param username
    * @returns User object
    */
-  getUserByUsername: (username: string) => Promise<User | null> | User | null;
+  getUserByUsername: (username: string) => Promise<Account | null> | Account | null;
   /**
    * Find an authenticator in the database by its credential ID
    * @param id
@@ -128,8 +119,8 @@ export type WebAuthnVerifyParams = {
   username: string | null;
 };
 
-export class WebAuthnStrategy<User> extends Strategy<
-  User,
+export class WebAuthnStrategy<Account> extends Strategy<
+Account,
   WebAuthnVerifyParams
 > {
   name = "webauthn";
@@ -141,19 +132,19 @@ export class WebAuthnStrategy<User> extends Strategy<
     | string[]
     | ((request: Request) => Promise<string | string[]> | string | string[]);
   getUserAuthenticators: (
-    user: User | null
+    user: Account | null
   ) => Promise<WebAuthnAuthenticator[]> | WebAuthnAuthenticator[];
   getUserDetails: (
-    user: User | null
+    user: Account | null
   ) => Promise<UserDetails | null> | UserDetails | null;
-  getUserByUsername: (username: string) => Promise<User | null> | User | null;
+  getUserByUsername: (username: string) => Promise<Account | null> | Account | null;
   getAuthenticatorById: (
     id: string
   ) => Promise<Authenticator | null> | Authenticator | null;
 
   constructor(
-    options: WebAuthnOptions<User>,
-    verify: StrategyVerifyCallback<User, WebAuthnVerifyParams>
+    options: WebAuthnOptions<Account>,
+    verify: StrategyVerifyCallback<Account, WebAuthnVerifyParams>
   ) {
     super(verify);
     this.rpName = options.rpName;
@@ -184,7 +175,7 @@ export class WebAuthnStrategy<User> extends Strategy<
 
   async generateOptions<ExtraData>(
     request: Request,
-    user: User | null,
+    user: Account | null,
     extraData?: ExtraData
   ) {
     let authenticators: WebAuthnAuthenticator[] = [];
@@ -245,12 +236,12 @@ export class WebAuthnStrategy<User> extends Strategy<
     request: Request,
     sessionStorage: SessionStorage<SessionData, SessionData>,
     options: AuthenticateOptions
-  ): Promise<User> {
+  ): Promise<Account> {
     let session = await sessionStorage.getSession(
       request.headers.get("Cookie")
     );
     try {
-      let user: User | null = session.get(options.sessionKey) ?? null;
+      let user: Account | null = session.get(options.sessionKey) ?? null;
 
       const rp = await this.getRP(request);
 

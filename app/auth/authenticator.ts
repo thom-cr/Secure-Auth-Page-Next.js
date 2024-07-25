@@ -5,9 +5,10 @@ import {
   SessionStorage,
 } from "@remix-run/server-runtime";
 import { AuthenticateOptions, Strategy } from "./strategy";
+import { Account } from "@prisma/client";
 
-export interface AuthenticateCallback<User> {
-  (user: User): Promise<Response>;
+export interface AuthenticateCallback<Account> {
+  (Account: Account): Promise<Response>;
 }
 
 /**
@@ -20,12 +21,12 @@ export interface AuthenticatorOptions {
   throwOnError?: AuthenticateOptions["throwOnError"];
 }
 
-export class Authenticator<User = unknown> {
+export class Authenticator<Account = unknown> {
   /**
    * A map of the configured strategies, the key is the name of the strategy
    * @private
    */
-  private strategies = new Map<string, Strategy<User, never>>();
+  private strategies = new Map<string, Strategy<Account, never>>();
 
   public readonly sessionKey: NonNullable<AuthenticatorOptions["sessionKey"]>;
   public readonly sessionErrorKey: NonNullable<
@@ -48,7 +49,7 @@ export class Authenticator<User = unknown> {
    *
    * It optionally receives an object with extra options. The supported options
    * are:
-   * - `sessionKey`: The key used to store and read the user in the session storage.
+   * - `sessionKey`: The key used to store and read the Account in the session storage.
    * @example
    * import { sessionStorage } from "./session.server";
    * let authenticator = new Authenticator(sessionStorage);
@@ -62,7 +63,7 @@ export class Authenticator<User = unknown> {
     private sessionStorage: SessionStorage,
     options: AuthenticatorOptions = {}
   ) {
-    this.sessionKey = options.sessionKey || "user";
+    this.sessionKey = options.sessionKey || "Account";
     this.sessionErrorKey = options.sessionErrorKey || "auth:error";
     this.sessionStrategyKey = options.sessionStrategyKey || "strategy";
     this.throwOnError = options.throwOnError ?? false;
@@ -74,10 +75,10 @@ export class Authenticator<User = unknown> {
    * It returns the Authenticator instance for concatenation.
    * @example
    * authenticator
-   *  .use(new SomeStrategy({}, (user) => Promise.resolve(user)))
-   *  .use(new SomeStrategy({}, (user) => Promise.resolve(user)), "another");
+   *  .use(new SomeStrategy({}, (Account) => Promise.resolve(Account)))
+   *  .use(new SomeStrategy({}, (Account) => Promise.resolve(Account)), "another");
    */
-  use(strategy: Strategy<User, never>, name?: string): Authenticator<User> {
+  use(strategy: Strategy<Account, never>, name?: string): Authenticator<Account> {
     this.strategies.set(name ?? strategy.name, strategy);
     return this;
   }
@@ -98,7 +99,7 @@ export class Authenticator<User = unknown> {
    * of the strategy you want to use and the request to authenticate.
    * @example
    * async function action({ request }: ActionFunctionArgs) {
-   *   let user = await authenticator.authenticate("some", request);
+   *   let Account = await authenticator.authenticate("some", request);
    * };
    * @example
    * async function action({ request }: ActionFunctionArgs) {
@@ -127,7 +128,7 @@ export class Authenticator<User = unknown> {
     > & {
       failureRedirect: AuthenticateOptions["failureRedirect"];
     }
-  ): Promise<User>;
+  ): Promise<Account>;
   authenticate(
     strategy: string,
     request: Request,
@@ -135,7 +136,7 @@ export class Authenticator<User = unknown> {
       AuthenticateOptions,
       "successRedirect" | "failureRedirect" | "throwOnError" | "context"
     >
-  ): Promise<User>;
+  ): Promise<Account>;
   authenticate(
     strategy: string,
     request: Request,
@@ -143,7 +144,7 @@ export class Authenticator<User = unknown> {
       AuthenticateOptions,
       "successRedirect" | "failureRedirect" | "throwOnError" | "context"
     > = {}
-  ): Promise<User> {
+  ): Promise<Account> {
     const strategyObj = this.strategies.get(strategy);
     if (!strategyObj) throw new Error(`Strategy ${strategy} not found.`);
     return strategyObj.authenticate(
@@ -161,21 +162,21 @@ export class Authenticator<User = unknown> {
   }
 
   /**
-   * Call this to check if the user is authenticated. It will return a Promise
-   * with the user object or null, you can use this to check if the user is
+   * Call this to check if the Account is authenticated. It will return a Promise
+   * with the Account object or null, you can use this to check if the Account is
    * logged-in or not without triggering the whole authentication flow.
    * @example
    * async function loader({ request }: LoaderFunctionArgs) {
-   *   // if the user is not authenticated, redirect to login
-   *   let user = await authenticator.isAuthenticated(request, {
+   *   // if the Account is not authenticated, redirect to login
+   *   let Account = await authenticator.isAuthenticated(request, {
    *     failureRedirect: "/login",
    *   });
-   *   // do something with the user
+   *   // do something with the Account
    *   return json(privateData);
    * }
    * @example
    * async function loader({ request }: LoaderFunctionArgs) {
-   *   // if the user is authenticated, redirect to /dashboard
+   *   // if the Account is authenticated, redirect to /dashboard
    *   await authenticator.isAuthenticated(request, {
    *     successRedirect: "/dashboard"
    *   });
@@ -183,9 +184,9 @@ export class Authenticator<User = unknown> {
    * }
    * @example
    * async function loader({ request }: LoaderFunctionArgs) {
-   *   // manually handle what happens if the user is or not authenticated
-   *   let user = await authenticator.isAuthenticated(request);
-   *   if (!user) return json(publicData);
+   *   // manually handle what happens if the Account is or not authenticated
+   *   let Account = await authenticator.isAuthenticated(request);
+   *   if (!Account) return json(publicData);
    *   return sessionLoader(request);
    * }
    */
@@ -196,7 +197,7 @@ export class Authenticator<User = unknown> {
       failureRedirect?: never;
       headers?: never;
     }
-  ): Promise<User | null>;
+  ): Promise<Account | null>;
   async isAuthenticated(
     request: Request | Session,
     options: {
@@ -212,7 +213,7 @@ export class Authenticator<User = unknown> {
       failureRedirect: string;
       headers?: HeadersInit;
     }
-  ): Promise<User>;
+  ): Promise<Account>;
   async isAuthenticated(
     request: Request | Session,
     options: {
@@ -240,17 +241,17 @@ export class Authenticator<User = unknown> {
           failureRedirect: string;
           headers?: HeadersInit;
         } = {}
-  ): Promise<User | null> {
+  ): Promise<Account | null> {
     let session = isSession(request)
       ? request
       : await this.sessionStorage.getSession(request.headers.get("Cookie"));
 
-    let user: User | null = session.get(this.sessionKey) ?? null;
+    let Account: Account | null = session.get(this.sessionKey) ?? null;
 
-    if (user) {
+    if (Account) {
       if (options.successRedirect) {
         throw redirect(options.successRedirect, { headers: options.headers });
-      } else return user;
+      } else return Account;
     }
 
     if (options.failureRedirect) {
@@ -259,7 +260,7 @@ export class Authenticator<User = unknown> {
   }
 
   /**
-   * Destroy the user session throw a redirect to another URL.
+   * Destroy the Account session throw a redirect to another URL.
    * @example
    * async function action({ request }: ActionFunctionArgs) {
    *   await authenticator.logout(request, { redirectTo: "/login" });

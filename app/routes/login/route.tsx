@@ -6,6 +6,8 @@ import { requireAnonymous } from "../../server/required.server";
 import { commitSession, getSession, sessionStorage } from "../../server/sessions.server";
 import { handleFormSubmit } from "../../auth/browser";
 import { authenticator, webAuthnStrategy } from "../../server/auth.server";
+import { WebAuthnOptionsResponse } from "../../auth/server";
+import { isoBase64URL } from "@simplewebauthn/server/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const user = await authenticator.isAuthenticated(request);
@@ -13,17 +15,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
       request.headers.get("Cookie")
     );
   
-    const options = webAuthnStrategy.generateOptions(request, user);
+    const options = await webAuthnStrategy.generateOptions(request, user);
   
     // Set the challenge in a session cookie so it can be accessed later.
-    session.set("challenge", (await options).challenge)
+    session.set("challenge", options.challenge);
   
-    const response = new Response();
+    commitSession(session);
+    const headers = new Headers();
     // Update the cookie
-    response.headers.append("Set-Cookie", await sessionStorage.commitSession(session))
-    response.headers.set("Cache-Control","no-store")
+    headers.append("Set-Cookie", await commitSession(session))
+    headers.set("Cache-Control","no-store")
   
-    return options;
+    return json(options, { headers });
   }
   
   export async function action({ request }: ActionFunctionArgs) {
@@ -45,7 +48,7 @@ export default function Login()
     const options = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
     return (
-      <Form onSubmit={handleFormSubmit(options)} method="POST">
+      <Form onSubmit={handleFormSubmit(options, { attestationType: "direct" })} method="POST">
         <label>
           Username
           <input type="text" name="username" />

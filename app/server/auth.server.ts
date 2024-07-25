@@ -1,19 +1,63 @@
 import { Authenticator } from "../auth/authenticator";
 import { sessionStorage } from "./sessions.server";
 import { WebAuthnStrategy } from "../auth/server";
-import {
-    getAuthenticators,
-    getUserByUsername,
-    getAuthenticatorById,
-    type User,
-    createUser,
-    createAuthenticator,
-    getUserById,
-} from "./db.server";
+import { PrismaClient, Authenticator as AuthenticatorModel, Account } from '@prisma/client';
 
-export let authenticator = new Authenticator<User>(sessionStorage);
+const prisma = new PrismaClient();
 
-export const webAuthnStrategy = new WebAuthnStrategy<User>(
+export let authenticator = new Authenticator<Account>(sessionStorage);
+
+export async function getAuthenticatorById(id: string) {
+  return await prisma.authenticator.findUnique({
+    where: { credentialID: id },
+  });
+}
+
+export async function getAuthenticators(user: Account | null) {
+  if (!user) return [];
+
+  return await prisma.authenticator.findMany({
+    where: { userId: user.id },
+  });
+}
+
+export async function getUserByUsername(email: string) {
+  return await prisma.account.findUnique({
+    where: { email: email },
+  });
+}
+
+export async function getUserById(id: string) {
+  return await prisma.account.findUnique({
+    where: { id: id },
+  });
+}
+
+export async function createAuthenticator(
+  authenticator: Omit<AuthenticatorModel, 'userId'>,
+  userId: string
+) {
+  return await prisma.authenticator.create({
+    data: {
+      credentialID: authenticator.credentialID,
+      userId: userId,
+      credentialPublicKey: authenticator.credentialPublicKey,
+      counter: authenticator.counter,
+      credentialDeviceType: authenticator.credentialDeviceType,
+      credentialBackedUp: authenticator.credentialBackedUp,
+      transports: authenticator.transports,
+      aaguid: authenticator.aaguid,
+    },
+  });
+}
+
+export async function createUser(email: string) {
+  return await prisma.account.create({
+    data: { email: email },
+  });
+}
+
+export const webAuthnStrategy = new WebAuthnStrategy<Account>(
     {
       // The human-readable name of your app
       // Type: string | (response:Response) => Promise<string> | string
@@ -26,7 +70,7 @@ export const webAuthnStrategy = new WebAuthnStrategy<User>(
       origin: (request: { url: string | URL; }) => new URL(request.url).origin,
       // Return the list of authenticators associated with this user. You might
       // need to transform a CSV string into a list of strings at this step.
-      getUserAuthenticators: async (user: User | null) => {
+      getUserAuthenticators: async (user: Account | null) => {
         const authenticators = await getAuthenticators(user);
   
         return authenticators.map((authenticator) => ({
@@ -37,13 +81,13 @@ export const webAuthnStrategy = new WebAuthnStrategy<User>(
       // Transform the user object into the shape expected by the strategy.
       // You can use a regular username, the users email address, or something else.
       getUserDetails: (user) =>
-        user ? { id: user.id, username: user.username } : null,
+        user ? { id: user.id, username: user.email } : null,
       // Find a user in the database with their username/email.
       getUserByUsername: (username: string) => getUserByUsername(username),
       getAuthenticatorById: (id: string) => getAuthenticatorById(id),
     },
     async function verify({ authenticator, type, username }) {
-      let user: User | null = null;
+      let user: Account | null = null;
       const savedAuthenticator = await getAuthenticatorById(
         authenticator.credentialID
       );
@@ -66,7 +110,15 @@ export const webAuthnStrategy = new WebAuthnStrategy<User>(
           // HANDLE NEW PASSKEY FOR EXISTING USER
           // Create a new user and authenticator
           user = await createUser(username);
-          await createAuthenticator(authenticator, user.id);
+          await createAuthenticator({
+            credentialID: authenticator.credentialID,
+            credentialPublicKey: authenticator.credentialPublicKey,
+            counter: authenticator.counter,
+            credentialDeviceType: authenticator.credentialDeviceType,
+            credentialBackedUp: authenticator.credentialBackedUp,
+            transports: authenticator.transports,
+            aaguid: authenticator.aaguid,
+          }, user.id);
         }
       } else if (type === "authentication") {
         if (!savedAuthenticator) throw new Error("Authenticator not found");
