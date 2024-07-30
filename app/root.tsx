@@ -1,9 +1,10 @@
-import { Link, Links, Meta, Outlet, Scripts, useLoaderData, useLocation } from "@remix-run/react";
+import { json, Link, Links, Meta, Outlet, Scripts, useLoaderData, useLocation } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-import { commitSession, csrf_token, getSession } from "./sessions.server";
+import { commitSession, getSession } from "./server/sessions.server"
 
 import "./styles.css";
+
 interface LoaderData
 {
     userId?: string;
