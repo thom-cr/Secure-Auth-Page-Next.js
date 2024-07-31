@@ -1,20 +1,28 @@
 import { type ActionFunctionArgs, json, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+
+import { csrf_token, csrf_validation } from "../../server/csrf.server";
+import { requireAnonymous } from "../../server/required.server";
+import { commitSession, getSession } from "../../server/sessions.server";
 
 import { login } from "./queries.server";
 import { validate } from "./validate.server";
-import { commitSession, getSession, requireAnonymous } from "../../sessions.server";
+  
+interface ActionData
+{
+    errors?: ValidationErrors;
+}
+
+interface LoaderData
+{
+    csrf: any;
+}
 
 interface ValidationErrors
 {
     email?: string;
     password?: string;
     message?: string;
-}
-  
-interface ActionData
-{
-    errors?: ValidationErrors;
 }
 
 export const meta = () =>
@@ -26,22 +34,47 @@ export async function loader({ request }: LoaderFunctionArgs)
 {
     await requireAnonymous(request);
 
-    return json({});
+    const session = await getSession(request.headers.get("Cookie"));
+    let csrf = csrf_token(session);
+
+    return json<LoaderData>({ csrf }, {
+        headers: {
+            "Set-Cookie": await commitSession(session),
+        },
+    });
 }
 
 export async function action({ request }: ActionFunctionArgs)
 {
-    let formData = await request.formData();
-    let email = String(formData.get("email"));
-    let password = String(formData.get("password"));
-    let errors = validate(email, password);
+    const formData = await request.formData();
+    const session = await getSession(request.headers.get("Cookie"));
+
+    try
+    {
+        await csrf_validation(request, formData);
+    }
+    catch (error)
+    {
+        if (process.env.NODE_ENV === "development")
+        {
+            console.error("CSRF VALIDATION ERROR :", error);
+        }
+
+        return redirect("/login", {
+          headers: { "Set-Cookie": await commitSession(session) },
+        });
+    }
+
+    const email = String(formData.get("email"));
+    const password = String(formData.get("password"));
+    const errors = validate(email, password);
     
     if (errors)
     {
         return json<ActionData>({ errors }, 400);
     }
 
-    let userId = await login(email, password);
+    const userId = await login(email, password);
 
     if (!userId)
     {
@@ -51,7 +84,6 @@ export async function action({ request }: ActionFunctionArgs)
         );
     }
 
-    const session = await getSession(request.headers.get("Cookie"));
     session.set("userId", userId);
     
     return redirect("/home", {
@@ -63,6 +95,7 @@ export async function action({ request }: ActionFunctionArgs)
 
 export default function Signup() {
     let actionResult = useActionData<typeof action>();
+    let { csrf } = useLoaderData<LoaderData>();
   
     return (
         <>
@@ -76,6 +109,7 @@ export default function Signup() {
             <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
                 <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                     <Form className="space-y-6" method="post">
+                        <input type="hidden" name="csrf" value={csrf} />
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
                                 Email address{" "}

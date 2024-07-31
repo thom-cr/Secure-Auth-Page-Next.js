@@ -1,8 +1,22 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useActionData, Form, Link, json, redirect } from "@remix-run/react";
-import { getSession, commitSession, requireVerified, requireId } from "../../sessions.server";
-import { validate_password } from "./validate.server";
+import { Form, json, Link, redirect,  useActionData, useLoaderData } from "@remix-run/react";
+import { commitSession, destroySession, getSession } from "../../server/sessions.server";
+
+import { csrf_token, csrf_validation } from "../../server/csrf.server";
+import { requireId, requireVerified } from "../../server/required.server";
+
 import { setupAccount } from "./queries.server";
+import { validate_password } from "./validate.server";
+
+interface ActionData
+{
+    errors?: ValidationErrors;
+}
+
+interface LoaderData
+{
+    csrf: any;
+}
 
 interface ValidationErrors
 {
@@ -11,23 +25,41 @@ interface ValidationErrors
     message?: string;
 }
 
-interface ActionData
-{
-    errors?: ValidationErrors;
-}
-
 export async function loader({ request }: LoaderFunctionArgs)
 {
     await requireVerified(request);
     await requireId(request);
+    
+    const session = await getSession(request.headers.get("Cookie"));
+    const csrf = csrf_token(session);
 
-    return json({});
+    return json<LoaderData>({ csrf }, {
+        headers: {
+            "Set-Cookie": await commitSession(session),
+        },
+    });
 }
 
 export async function action({ request }: ActionFunctionArgs)
 {
     const formData = await request.formData();
     const session = await getSession(request.headers.get("Cookie"));
+
+    try
+    {
+        await csrf_validation(request, formData);
+    }
+    catch (error)
+    {
+        if (process.env.NODE_ENV === "development")
+        {
+            console.error("CSRF VALIDATION ERROR :", error);
+        }
+
+        return redirect("/", {
+          headers: { "Set-Cookie": await commitSession(session) },
+        });
+    }
 
     const user_id = session.get("userId");
     const first_name = String(formData.get("first_name"));
@@ -41,7 +73,7 @@ export async function action({ request }: ActionFunctionArgs)
     {
         return json<ActionData>({ errors }, { status: 400 });
     }
-    
+
     await setupAccount(first_name, last_name, password, user_id);
 
     return redirect("/home", {
@@ -54,6 +86,8 @@ export async function action({ request }: ActionFunctionArgs)
 export default function Setup()
 {
     const actionResult = useActionData<ActionData>();
+
+    let { csrf } = useLoaderData<LoaderData>();
 
     let passwordError = actionResult?.errors?.password;
     let passwordCheckError = actionResult?.errors?.password_check;
@@ -68,6 +102,7 @@ export default function Setup()
                 <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
                     <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                         <Form className="space-y-6" method="post">
+                            <input type="hidden" name="csrf" value={csrf} />
                             <div>
                                 <label className="block text-sm font-medium leading-6 text-gray-900">
                                     First Name {" "}

@@ -1,15 +1,12 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, json, Link, useActionData } from "@remix-run/react";
+import { Form, json, Link, useActionData, useLoaderData } from "@remix-run/react";
 
-import { getSession, commitSession, requireAnonymous, destroySession, setup_uuid } from "../../sessions.server";
+import { csrf_token, csrf_validation } from "../../server/csrf.server";
+import { requireAnonymous } from "../../server/required.server";
+import { commitSession, destroySession, getSession, setup_uuid } from "../../server/sessions.server";
+
 import { createAccount, mailVerification } from "./queries.server";
 import { validate_email } from "./validate.server";
-
-interface ValidationErrors
-{
-    email?: string;
-    code?: string;
-}
 
 interface ActionData
 {
@@ -17,10 +14,29 @@ interface ActionData
     step?: "verify_email" | "verify_code";
 }
 
+interface LoaderData
+{
+    csrf: any;
+}
+
+interface ValidationErrors
+{
+    email?: string;
+    code?: string;
+}
+
 export async function loader({ request }: LoaderFunctionArgs)
 {
     await requireAnonymous(request);
-    return json({});
+
+    const session = await getSession(request.headers.get("Cookie"));
+    const csrf = csrf_token(session);
+    
+    return json<LoaderData>({ csrf }, {
+        headers: {
+            "Set-Cookie": await commitSession(session),
+        },
+    });
 }
 
 export async function action({ request }: ActionFunctionArgs)
@@ -31,6 +47,22 @@ export async function action({ request }: ActionFunctionArgs)
 
     if (intent === "verify_email")
     {
+        try
+        {
+            await csrf_validation(request, formData);
+        }
+        catch (error)
+        {
+            if (process.env.NODE_ENV === "development")
+            {
+                console.error(`CSRF VALIDATION ERROR : ${error}`);
+            }
+
+            return redirect("/", {
+            headers: { "Set-Cookie": await commitSession(session) },
+            });
+        }
+
         const email = String(formData.get("email"));
 
         let errors = await validate_email(email);
@@ -59,6 +91,22 @@ export async function action({ request }: ActionFunctionArgs)
         const buff_code = `${formData.get('digit1')}${formData.get('digit2')}${formData.get('digit3')}${formData.get('digit4')}${formData.get('digit5')}${formData.get('digit6')}`;
         const v_tries = session.get("v_tries") || 0;
 
+        try
+        {
+            await csrf_validation(request, formData);
+        }
+        catch (error)
+        {
+            if (process.env.NODE_ENV === "development")
+            {
+                console.error("CSRF VALIDATION ERROR :", error);
+            }
+
+            return redirect("/", {
+            headers: { "Set-Cookie": await destroySession(session) },
+            });
+        }
+
         if(process.env.NODE_ENV === "development")
         {
             console.log(`V_code : ${v_code}`);
@@ -86,7 +134,7 @@ export async function action({ request }: ActionFunctionArgs)
             session.unset("v_tries");
             session.flash("setup", setup_uuid);
 
-            let user = await createAccount(email);
+            const user = await createAccount(email);
             session.set("userId", user.id);
             
             return redirect("/setup", {
@@ -117,6 +165,8 @@ export default function Signup()
     const actionResult = useActionData<ActionData>();
     const step = actionResult?.step || "verify_email";
 
+    const { csrf } = useLoaderData<LoaderData>();
+
     let codeError = actionResult?.errors?.code;
     let emailError = actionResult?.errors?.email;
 
@@ -145,6 +195,7 @@ export default function Signup()
                 {step === "verify_email" ? (
                     <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                         <Form method="post" className="space-y-6">
+                            <input type="hidden" name="csrf" value={csrf} />
                             <input type="hidden" name="intent" value="verify_email" />
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
@@ -176,6 +227,7 @@ export default function Signup()
                 ) : step === "verify_code" ? (
                     <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
                         <Form method="post" className="space-y-6">
+                            <input type="hidden" name="csrf" value={csrf} />
                             <input type="hidden" name="intent" value="verify_code" />
                                 <div className="flex space-x-2 justify-center">
                                     {[...Array(6)].map((_, i) => (

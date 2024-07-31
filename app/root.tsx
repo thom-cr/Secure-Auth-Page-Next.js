@@ -1,16 +1,22 @@
-import { Link, Links, Meta, Outlet, Scripts, useLoaderData, useLocation } from "@remix-run/react";
+import { json, Link, Links, Meta, Outlet, Scripts, useLoaderData, useLocation } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-import { getSession } from "./sessions.server";
+import { commitSession, getSession } from "./server/sessions.server"
 
 import "./styles.css";
+
+interface LoaderData
+{
+    userId?: string;
+}
+
 
 export async function loader({ request }: LoaderFunctionArgs)
 {
     const session = await getSession(request.headers.get("Cookie"));
     const userId = session.get("userId");
-    
-    return { userId };
+
+    return json<LoaderData>( { userId }, { headers: { "Set-Cookie": await commitSession(session)}});
 }
 
 export const meta = () =>
@@ -57,9 +63,7 @@ export default function App()
                     </div>
                 )}
 
-                <div className="pt-20">
                     <Outlet />
-                </div>
 
                 <Scripts />
             </body>
