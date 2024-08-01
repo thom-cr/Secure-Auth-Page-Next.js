@@ -11,12 +11,13 @@ datasource db {
 }
 
 model Account {
-  id         String @id @default(uuid())
-  email      String @unique
-  first_name String ?
-  last_name  String ?
+  id             String @id @default(uuid())
+  email          String @unique
+  first_name     String ?
+  last_name      String ?
 
-  Password Password?
+  Password       Password ?
+  Authenticators Authenticator[]
 }
 
 model Password {
@@ -25,4 +26,19 @@ model Password {
   hash      String
   Account   Account @relation(fields: [accountId], references: [id])
   accountId String  @unique
+}
+
+model Authenticator {
+  credentialID          String  @id @default(cuid())
+  userId                String
+  credentialPublicKey   String
+  counter               Int
+  credentialDeviceType  String
+  credentialBackedUp    Boolean 
+  transports            String
+  aaguid                String
+
+  Account               Account @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
