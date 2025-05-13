@@ -1,4 +1,4 @@
-# — Page d'authentification sécurisée avec Next.js -
+# - Page d'authentification sécurisée avec Next.js -
 
 Ce projet implémente une page d'authentification simplifiée initialement développée avec Remix, puis migrée vers Next.js App Router, avec gestion de session via cookie, vérification email, validation CSRF et base de données Prisma (SQLite).
 
@@ -93,6 +93,9 @@ npm run dev
 - Ajout des champs prénom et nom dans le formulaire
 - Ajout d’un champ de confirmation de mot de passe
 - Refactoring du code lié au `signup`
+
+### ✅ Version 0.9
+- Transfert de l'application de Remix vers Next.js
 
 ---
 
