@@ -1,51 +1,25 @@
 {
-  "name": "stage-projet1",
-  "version": "1.0.0",
-  "description": "Page d'authentification",
-  "main": "index.js",
-  "type": "module",
+  "name": "auth_page_next",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "dev": "node ./server.js",
-    "start": "cross-env NODE_ENV=production node ./server.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/thom-cr/stage-projet1.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/thom-cr/stage-projet1/issues"
-  },
-  "homepage": "https://github.com/thom-cr/stage-projet1#readme",
   "dependencies": {
-    "@prisma/client": "^5.16.1",
-    "@remix-run/express": "^2.10.0",
-    "@remix-run/node": "^2.10.2",
-    "@remix-run/react": "^2.10.2",
-    "@remix-run/serve": "^2.10.2",
-    "bootstrap": "^5.3.3",
-    "cross-env": "^7.0.3",
-    "express": "^4.19.2",
-    "isbot": "^4.4.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "resend": "^3.4.0",
-    "uuid": "^10.0.0"
+    "@prisma/client": "^6.7.0",
+    "next": "15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.10.2",
-    "@types/node": "^20.14.10",
-    "@types/react": "^18.3.3",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.39",
-    "prisma": "^5.16.1",
-    "rollup-plugin-node-builtins": "^2.0.0",
-    "rollup-plugin-node-globals": "^1.4.0",
-    "tailwindcss": "^3.4.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.3",
-    "vite": "^5.3.3"
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "prisma": "^6.7.0",
+    "tailwindcss": "^4"
   }
 }

@@ -1,5 +1,7 @@
+.next
 node_modules
-
+prisma/migrations
+prisma/prisma
 /.cache
 /build
 .env

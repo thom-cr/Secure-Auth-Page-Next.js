@@ -1,105 +1,115 @@
-# Projet 1 
+# — Page d'authentification sécurisée avec Next.js -
 
-Page d'authentification simplifie avec remix. 
+Ce projet implémente une page d'authentification simplifiée initialement développée avec Remix, puis migrée vers Next.js App Router, avec gestion de session via cookie, vérification email, validation CSRF et base de données Prisma (SQLite).
 
-## Utilisation : 
-``` 
-git clone { lien } 
-``` 
+---
 
-``` 
-cd { dossier } 
-``` 
+## Installation
 
-``` 
-npm run dev 
-``` 
-## Version 0.1 :  
+1. **Cloner le projet**
 
-App avec serveur http fonctionnelle 
+```bash
+git clone https://github.com/thom-cr/Secure-Auth-Page-Next.js.git
+cd Secure-Auth-Page-Next.js
+```
 
-## Version 0.2 :  
+2. **Installer les dépendances**
 
-Mise en place du https 
+```bash
+npm install
+```
 
-## Version 0.3 :  
+3. **Initialiser la base de données**
 
-1- création dossier pour certificat. 
+```bash
+npx prisma migrate dev --name init
+```
 
-2- création de la page principale. 
+4. **Créer le fichier `.env` à la racine**
 
-3- création de la page signup. 
+```env
+DATABASE_URL="file:C:/chemin/absolu/vers/dev.db"
+COOKIE_SECRET="un_secret_aleatoire"
+```
 
-4- signup utilise post (console log uniquement). 
+> Remplace le chemin par le **chemin absolu vers `dev.db`** sur votre machine.
 
-5- problème appStylesHref inclusion css dans url systématiquement apparu. 
+5. **Lancer le serveur**
 
-## Version 0.4 :  
+```bash
+npm run dev
+```
 
-1- résolution problème css. 
+---
 
-2- mise en place validation form. 
+## Fonctionnalités principales
 
-3- nettoyage code. 
+- Gestion des sessions via cookies (`HttpOnly`, `SameSite=Lax`)
+- Inscription avec validation d'email par code à 6 chiffres
+- Connexion et déconnexion sécurisées
+- Vérification CSRF à chaque étape critique
+- Protection des routes côté serveur
+- Base de données SQLite (via Prisma)
+- Interface utilisateur simple
 
-## Version 0.5 :  
+---
 
-1- ajout de Prisma db temporairement pour test. 
+## 🧾 Journal des versions
 
-2- mise à jour de la validation avec la base de données. 
+### ✅ Version 0.1
+- Serveur HTTP fonctionnel de base
 
-3- initialisation de typescript (oubli). 
+### ✅ Version 0.2
+- Mise en place du HTTPS
 
-4- nettoyage code. 
+### ✅ Version 0.3
+- Dossier de certificat
+- Création des pages principales : home, login, signup
+- Mise en place du POST sur le formulaire d’inscription
+- Apparition d’un bug d’inclusion CSS dans l’URL
 
-## Version 0.6 :  
+### ✅ Version 0.4
+- Correction du bug CSS
+- Validation des formulaires
+- Nettoyage du code
 
-1- ajout logout. 
+### ✅ Version 0.5
+- Intégration temporaire de Prisma et SQLite
+- Mise à jour de la validation avec la BDD
+- Initialisation de TypeScript
+- Nettoyage du code
 
-2- ajout du login. 
+### ✅ Version 0.6
+- Ajout du logout
+- Ajout du login connecté à la base de données
+- Vérifications d’authentification
 
-3- mise en place des vérifications nécessaires avec la base de données. 
+### ✅ Version 0.7
+- Protection des routes si non authentifié
+- Redirection si l'utilisateur est connecté
+- Création de la page index
 
-## Version 0.7 : 
+### ✅ Version 0.8
+- Ajout des champs prénom et nom dans le formulaire
+- Ajout d’un champ de confirmation de mot de passe
+- Refactoring du code lié au `signup`
 
-1- protection des routes avec l'authentification. 
+---
 
-2- redirection des utilisateurs connectes. 
+## 🛠️ Issues & Refactorings
 
-3- création de la page index.
+### 🧩 Issue 1: Migration vers `CookieSessionStorage`
+- Passage de `auth.server.ts` à `sessions.server.ts`
+- Unification des cookies de session sur toutes les routes
 
-## Version 0.8 : 
+### 🧩 Issue 3: Vérification Email
+- Ajout d'une page de vérification `verify.{token}.tsx`
+- Redirection de l’inscription vers la vérification
+- Création du compte uniquement après vérification réussie
+- Expiration du token pour empêcher les reouvertures
 
-1- Modification base de données. 
+### 🧩 Issue 4: Migration vers SQLite
+- Passage de PostgreSQL/MySQL à SQLite via Prisma
+- Configuration simplifiée pour usage local
 
-2- Ajout des champs prénoms et noms. 
-
-3- Ajout d’un champ mot de passe vérification. 
-
-4- Nettoyage code et modifications des fichiers signup associés aux updates.  
-
-## Issue 1 ( CookieSessionStorage ) :
-
-- Remplacement du cookie d'authentification par un cookie de session.
-
-- auth.server.ts --> sessions.server.ts
-
-- Mise a jour de la recuperation des cookies dans l'ensemble des routes.
-
-## Issue 4 ( SQlite Migration ) :
-
-- Migration de la base de donnee vers une version SQlite.
-
-## Issue 3 ( Mail Checking ) :
-
-- Creation verify.${token}.tsx
-
-- Redirection vers une page de verification avec code a 6 chiffres envoye par mail.
-
-- Mise a jour du signup pour la redirection et deplacement de la creation de compte dans verify.
-
-- Mise a jour des differentes routes et expiration du token afin d'empecher de rouvrir la verification.
-
-- validate.ts --> validate.server.ts
-
-- queries.ts --> queries.server.ts
+---
