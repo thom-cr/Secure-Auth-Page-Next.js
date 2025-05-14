@@ -43,15 +43,15 @@ export default function HomePage() {
     <div className="flex flex-col items-center justify-start h-screen">
       <div className="fixed top-0 right-0 p-4">
         <form method="POST" action="/api/logout">
-          <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
+          <button className="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-500">
             Log out
           </button>
         </form>
       </div>
-      <h1 className="text-white text-4xl font-bold mt-8 text-center">
+      <h1 className="text-black text-4xl font-bold mt-8 text-center">
         Welcome Home,<br /> {name}
       </h1>
-      <p className="text-white text-2xl font-semibold mt-4 text-center">
+      <p className="text-black text-2xl font-semibold mt-4 text-center">
         ID: {userId}
       </p>
     </div>

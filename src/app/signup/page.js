@@ -92,13 +92,13 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-full flex-1 flex-col mt-20 sm:px-6 lg:px-8">
+    <div className="bg-white flex min-h-full flex-1 flex-col pt-8 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="text-center text-2xl font-bold text-white">Sign Up</h2>
+        <h2 className="text-center text-2xl font-bold text-black">Sign Up</h2>
       </div>
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-        <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+      <div className="bg-white mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+        <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12 border border-2 border-black">
           {step === 'verify_email' ? (
             <form className="space-y-6" onSubmit={handleEmailSubmit}>
               <input type="hidden" name="csrf" value={csrf} />
@@ -136,7 +136,7 @@ export default function SignupPage() {
                     maxLength={1}
                     required
                     onInput={handleInputJump}
-                    className="w-12 h-12 text-center text-xl border border-gray-300 rounded"
+                    className="w-12 h-12 text-center text-xl border border-gray-900 rounded"
                   />
                 ))}
               </div>
@@ -154,7 +154,7 @@ export default function SignupPage() {
 
           <div className="mt-6">
             <Link href="/">
-              <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700">
+              <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-600">
                 Back
               </button>
             </Link>

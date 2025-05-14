@@ -15,7 +15,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header>
+    <header className="bg-black text-white shadow-md">
       <Link href="/">
         <h1 className="top-0 left-0 w-full text-4xl font-bold p-4 shadow-md z-10">
           DEMO WEBSITE
@@ -25,13 +25,13 @@ export default function Header() {
         <div className="fixed top-0 right-0 p-4">
           {userId ? (
             <form method="POST" action="/api/logout">
-              <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
+              <button className="bg-white text-black border border-gray-800 px-4 py-2 rounded-md hover:bg-gray-200">
                 Log out
               </button>
             </form>
           ) : (
             <Link href="/login">
-              <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-500">
+              <button className="bg-white text-black border border-gray-800 px-4 py-2 rounded-md hover:bg-gray-200">
                 Log in
               </button>
             </Link>
