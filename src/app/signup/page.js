@@ -136,7 +136,7 @@ export default function SignupPage() {
                     maxLength={1}
                     required
                     onInput={handleInputJump}
-                    className="w-12 h-12 text-center text-xl border border-gray-900 rounded"
+                    className="w-12 h-12 text-center text-black text-xl border border-gray-900 rounded"
                   />
                 ))}
               </div>
