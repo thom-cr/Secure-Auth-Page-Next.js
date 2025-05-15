@@ -1,5 +1,7 @@
 import './globals.css';
+
 import Header from './header';
+
 import { Geist, Geist_Mono } from 'next/font/google';
 
 const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });

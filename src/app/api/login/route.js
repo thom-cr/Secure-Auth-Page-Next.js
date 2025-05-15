@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getSession, commitSession } from '@/lib/session';
+
+import { commitSession, getSession } from '@/lib/session';
 import { csrf_validation } from '@/lib/csrf';
-import { validateLogin } from '@/lib/validate/login';
 import { login } from '@/lib/queries/login';
+import { validateLogin } from '@/lib/validate/login';
 
 export async function POST(req) {
   const formData = await req.formData();
@@ -13,9 +14,11 @@ export async function POST(req) {
     await csrf_validation(req, formData);
   } catch (error) {
     console.error('CSRF validation error:', error);
-    const response = NextResponse.redirect(new URL('/login', req.url));
-    response.headers.set('Set-Cookie', await commitSession(session));
-    return response;
+    
+    const res = NextResponse.redirect(new URL('/login', req.url));
+    res.headers.set('Set-Cookie', await commitSession(session));
+    
+    return res;
   }
 
   const email = String(formData.get('email'));
@@ -33,7 +36,9 @@ export async function POST(req) {
   }
 
   session.set('userId', userId);
-  const response = NextResponse.redirect(new URL('/home', req.url));
-  response.headers.set('Set-Cookie', await commitSession(session));
-  return response;
+  
+  const res = NextResponse.redirect(new URL('/home', req.url));
+  res.headers.set('Set-Cookie', await commitSession(session));
+  
+  return res;
 }

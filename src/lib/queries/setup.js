@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+
 import { prisma } from '@/db/prisma';
 
 export async function setupAccount(first_name, last_name, password, userId) {

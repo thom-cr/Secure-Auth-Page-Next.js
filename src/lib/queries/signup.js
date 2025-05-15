@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
-import { prisma } from '@/db/prisma';
 import { Resend } from 'resend';
+
+import { prisma } from '@/db/prisma';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -14,6 +15,7 @@ export async function accountExists(email) {
 
   if (!account.Password) {
     await prisma.account.delete({ where: { email } });
+    
     return false;
   }
 

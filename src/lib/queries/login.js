@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+
 import { prisma } from '@/db/prisma';
 
 export async function login(email, password) {
@@ -19,6 +20,7 @@ export async function login(email, password) {
     if (process.env.NODE_ENV === 'development') {
       console.error('LOGIN ERROR:', err);
     }
+    
     return false;
   }
 }

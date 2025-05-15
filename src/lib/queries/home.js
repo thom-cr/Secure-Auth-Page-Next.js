@@ -16,6 +16,7 @@ export async function fullName(userId) {
     if (process.env.NODE_ENV === 'development') {
       console.error('FULL NAME FUNCTION ERROR:', err);
     }
+    
     return '';
   }
 }

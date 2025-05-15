@@ -29,6 +29,7 @@ export async function getSession(cookieHeader) {
 
 export async function commitSession(session) {
   const cookieValue = encodeURIComponent(JSON.stringify(session.data));
+  
   return `${COOKIE_NAME}=${cookieValue}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000; ${
     process.env.NODE_ENV === 'production' ? 'Secure;' : ''
   }`;

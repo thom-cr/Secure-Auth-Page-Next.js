@@ -1,8 +1,9 @@
-import { getSession, commitSession } from '@/lib/session';
+import { NextResponse } from 'next/server';
+
+import { commitSession, getSession } from '@/lib/session';
 import { csrf_validation } from '@/lib/csrf';
 import { setupAccount } from '@/lib/queries/setup';
 import { validatePassword } from '@/lib/validate/setup';
-import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   const formData = await req.formData();
@@ -13,7 +14,9 @@ export async function POST(req) {
     await csrf_validation(req, formData);
   } catch (e) {
     const res = NextResponse.redirect(new URL('/', req.url));
+    
     res.headers.set('Set-Cookie', await commitSession(session));
+    
     return res;
   }
 
@@ -24,6 +27,7 @@ export async function POST(req) {
   const password_check = formData.get('password_check');
 
   const errors = await validatePassword(password, password_check);
+  
   if (errors) {
     return NextResponse.json({ errors }, { status: 400 });
   }
@@ -32,5 +36,6 @@ export async function POST(req) {
 
   const res = NextResponse.redirect(new URL('/home', req.url));
   res.headers.set('Set-Cookie', await commitSession(session));
+  
   return res;
 }

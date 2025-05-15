@@ -1,14 +1,18 @@
 import { randomBytes } from 'node:crypto';
-import { getSession } from './session';
+
+import { getSession } from '@/lib/session';
 
 export function csrf_token(session) {
   const existing = session.get('csrf');
+  
   if (existing) {
     return { token: existing, updated: false };
   }
 
   const token = randomBytes(16).toString('hex');
+  
   session.set('csrf', token);
+  
   return { token, updated: true };
 }
 

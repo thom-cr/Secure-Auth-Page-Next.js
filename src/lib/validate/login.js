@@ -1,5 +1,6 @@
 export function validateLogin(email, password) {
   const errors = {};
+  
   if (!email) {
     errors.email = 'Email is required.';
   } else if (!email.includes('@')) {
