@@ -33,13 +33,13 @@ export default function SetupPage() {
   };
 
   return (
-    <div className="flex min-h-full flex-1 flex-col mt-20 sm:px-6 lg:px-8">
+    <div className="bg-white flex min-h-full flex-1 flex-col pt-8 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="text-center text-2xl font-bold text-white">Setup</h2>
+        <h2 className="text-center text-2xl font-bold text-black">Setup</h2>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-        <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+        <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12 border border-2 border-black">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <input type="hidden" name="csrf" value={csrf} />
 
