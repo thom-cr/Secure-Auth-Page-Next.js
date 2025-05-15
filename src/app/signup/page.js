@@ -7,8 +7,9 @@ import { useRouter } from 'next/navigation';
 export default function SignupPage() {
   const [csrf, setCsrf] = useState('');
   const [step, setStep] = useState('verify_email');
-  const [emailError, setEmailError] = useState('');
+  const [formError, setFormError] = useState('');
   const [codeError, setCodeError] = useState('');
+  const [email, setEmail] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function SignupPage() {
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    setEmailError('');
+    setFormError('');
 
     const formData = new FormData(e.target);
     formData.set('intent', 'verify_email');
@@ -47,8 +48,18 @@ export default function SignupPage() {
       }
 
       const data = await res.json();
-      if (data.errors?.email) {
-        setEmailError(data.errors.email);
+
+      if (data.errors?.form) {
+        setFormError(data.errors.form);
+        return;
+      }
+
+      if (data.email) {
+        setEmail(data.email);
+      }
+
+      if (data.errors?.form) {
+        setFormError(data.errors.form);
       } else if (data.step === 'verify_code') {
         setStep('verify_code');
       }
@@ -60,6 +71,7 @@ export default function SignupPage() {
   const handleCodeSubmit = async (e) => {
     e.preventDefault();
     setCodeError('');
+    setFormError('');
 
     const formData = new FormData(e.target);
     formData.set('intent', 'verify_code');
@@ -76,6 +88,13 @@ export default function SignupPage() {
       }
 
       const data = await res.json();
+
+      if (data.step === 'verify_email') {
+        setStep('verify_email');
+        setFormError(data.errors?.form || '');
+        return;
+      }
+
       if (data.errors?.code) {
         setCodeError(data.errors.code);
       }
@@ -105,8 +124,8 @@ export default function SignupPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-900">
                   Email address{' '}
-                  {emailError && (
-                    <span className="text-red-600 font-bold">{emailError}</span>
+                  {formError && (
+                    <span className="text-red-600 font-bold">{formError}</span>
                   )}
                 </label>
                 <input
@@ -114,6 +133,8 @@ export default function SignupPage() {
                   type="email"
                   required
                   autoFocus
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="form-input block w-full rounded-md border py-1.5 text-gray-900"
                 />
               </div>
