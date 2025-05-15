@@ -7,10 +7,17 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function accountExists(email) {
   const account = await prisma.account.findUnique({
     where: { email },
-    select: { id: true },
+    include: { Password: true },
   });
 
-  return Boolean(account);
+  if (!account) return false;
+
+  if (!account.Password) {
+    await prisma.account.delete({ where: { email } });
+    return false;
+  }
+
+  return true;
 }
 
 export async function createAccount(email) {
@@ -27,11 +34,11 @@ export async function mailVerification(email) {
   const buff = crypto.randomBytes(3);
   const code = parseInt(buff.toString('hex'), 16).toString().padStart(6, '0').substring(0, 6);
 
-  /*if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
     console.log(`Verification code: ${code}`);
-  }*/
+  }
   
-  try {
+  /*try {
       await resend.emails.send({
         from: 'Authentication Demo <onboarding@resend.dev>',
         to: email,
@@ -40,7 +47,7 @@ export async function mailVerification(email) {
       });
     } catch (err) {
       console.error('Email failed:', err);
-  }
+  }*/
 
   return code;
 }
