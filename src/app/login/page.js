@@ -130,14 +130,13 @@ export default function LoginPage() {
               </span>
             </div>
           </form>
-        </div>
-
-        <div className="fixed left-0 p-4">
-          <Link href="/">
-            <button className="bg-black text-white border border-black px-4 py-2 rounded-md hover:bg-gray-600">
-              Back
-            </button>
-          </Link>
+          <div className='mt-6'>
+            <Link href="/">
+              <button className="bg-black text-white border border-black px-4 py-2 rounded-md hover:bg-gray-600">
+                Back
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

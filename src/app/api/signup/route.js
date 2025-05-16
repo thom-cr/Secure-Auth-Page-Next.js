@@ -105,7 +105,7 @@ export async function POST(req) {
       
       session.set('userId', user.id);
 
-      const res = NextResponse.redirect(new URL('/setup', req.url));
+      const res = NextResponse.redirect(new URL('/setup', req.url), 303);
       res.headers.set('Set-Cookie', await commitSession(session));
       
       return res;

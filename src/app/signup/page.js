@@ -37,9 +37,12 @@ export default function SignupPage() {
         body: formData,
       });
 
-      if (res.redirected) {
-        router.push(res.url);
-        return;
+      if (res.status === 302 || res.status === 303) {
+        const location = res.headers.get('Location');
+        if (location) {
+          router.push(location);
+          return;
+        }
       }
 
       const contentType = res.headers.get('content-type') || '';
@@ -83,9 +86,12 @@ export default function SignupPage() {
         body: formData,
       });
 
-      if (res.redirected) {
-        router.push(res.url);
-        return;
+      if (res.status === 302 || res.status === 303) {
+        const location = res.headers.get('Location');
+        if (location) {
+          router.push(location);
+          return;
+        }
       }
 
       const data = await res.json();
